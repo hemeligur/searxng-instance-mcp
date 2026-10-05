@@ -113,10 +113,11 @@ searxng-instance-mcp/
 - Tool `web_search` disponível
 - Correção das assinaturas dos handlers MCP
 
-### 2025-10-06 (Debug - Problema Não Resolvido)
+### 2025-10-06 (Debug - RESOLVIDO)
 - **Problema:** `Invalid request parameters` ao chamar web_search via Pi
-- **Causa:** Pi valida parâmetros antes de enviar ao servidor
-- **Testes:** 8 tentativas de solução falharam
-- **Status:** Servidor conecta, lista ferramenta, mas chamada falha
-- **Workaround:** Usar `mcp__webscout__DuckDuckGoWebSearch` funciona
-- **Documentação:** `docs/mcp-debug-report.md` criado
+- **Causa:** API antiga do MCP SDK incompatível com protocolo moderno do Pi
+- **Solução:** Migrou de `mcp[cli]>=1.0.0` para `fastmcp>=4.0.0`
+- **Código novo:** Usa decorator `@mcp.tool()` em vez de `add_request_handler`
+- **Commit:** `0822031` no branch `fix/fastmcp-migration`
+- **Testes:** 27 testes passando ✅
+- **Pi:** Ferramenta funcionando corretamente via `mcp__searxng_web_search__web_search`
