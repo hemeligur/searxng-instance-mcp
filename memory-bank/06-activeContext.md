@@ -53,18 +53,36 @@
 
 ## Notas de Debug
 
-### Erro Anterior - API MCP Incorreta
+### API MCP - Handler Signatures
 ```python
-# ❌ Errado - não existe on_list_tools()
-@server.list_tools()
-async def list_tools():
-    ...
-
-# ✅ Correto - usar add_request_handler
-async def list_tools_handler(request):
+# ✅ Correto - handlers recebem (ctx, params)
+async def list_tools_handler(
+    ctx: ServerRequestContext, 
+    params: ListToolsRequest
+) -> ListToolsResult:
     return ListToolsResult(tools=[...])
 
+async def call_tool_handler(
+    ctx: ServerRequestContext, 
+    params: CallToolRequest
+) -> CallToolResult:
+    # params.name e params.arguments
+    ...
+
 server.add_request_handler("tools/list", ListToolsRequest, list_tools_handler)
+server.add_request_handler("tools/call", CallToolRequest, call_tool_handler)
+```
+
+### Para executar como módulo
+```bash
+# Precisa de __main__.py
+uv run python -m searxng_mcp
+```
+
+### Registrar no Pi
+```bash
+pi mcp add -l searxng-web-search -- uv run python -m searxng_mcp
+pi mcp list  # verificar conexão
 ```
 
 ### Para Testar Manualmente

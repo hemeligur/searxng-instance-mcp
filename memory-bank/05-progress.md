@@ -106,3 +106,9 @@ searxng-instance-mcp/
   - Todos os testes passando
 
 **Status Final: ✅ PROJETO COMPLETO**
+
+### 2025-10-06 (Pi Integration)
+- MCP configurado e funcionando no Pi
+- Servidor registrado via `pi mcp add -l searxng-web-search`
+- Tool `web_search` disponível
+- Correção das assinaturas dos handlers MCP
