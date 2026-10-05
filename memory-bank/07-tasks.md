@@ -9,12 +9,12 @@
 - [x] **T-004**: Criar `src/searxng_mcp/models.py` com dataclasses
 
 ### Fase 2: Discovery Dinâmico
-- [ ] **T-010**: Implementar `InstanceDiscovery` em `discovery.py`
+- [x] **T-010**: Implementar `InstanceDiscovery` em `discovery.py` ✅
   - Buscar instâncias de `https://searx.space/api/v1/instances`
   - Filtrar por: `uptime > 95%`, `network/tls_rank == A+`, `engines` principais
   - Implementar cache local em `~/.cache/searxng-mcp/instances.json`
   - TTL configurável (padrão: 1 hora)
-- [ ] **T-011**: Definir `FALLBACK_INSTANCES` hardcoded
+- [x] **T-011**: Definir `FALLBACK_INSTANCES` hardcoded ✅
   - `https://sx.xo.st`
   - `https://searxng.org`
   - `https://xka.cz`
