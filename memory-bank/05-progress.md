@@ -1,7 +1,7 @@
 # Progress
 
 ## Status Geral
-🟡 **Em Implementação** - Fase 2 em andamento
+🟢 **Em Implementação** - Fase 4 concluída
 
 ## Marcos
 
@@ -9,12 +9,28 @@
 - [x] Plano de tarefas documentado
 - [x] Estrutura base do projeto criada (pyproject.toml, diretórios)
 - [x] Implementação do discovery dinâmico
-- [ ] Implementação do SearXNGManager
-- [ ] Implementação do servidor MCP
+- [x] Implementação do SearXNGManager
+- [x] Implementação do servidor MCP
 - [ ] Configuração do Pi (.pi/mcp.json)
 - [ ] Testes básicos
 
 ## Histórico de Mudanças
+
+### 2025-10-06
+- **T-030, T-031**: Implementado servidor MCP em `server.py`
+  - Ferramenta `web_search(query, results_limit)` exposta via SDK MCP
+  - Handler `call_tool()` processa buscas e retorna JSON
+  - Função `main()` inicia servidor stdio com initialization options
+  - Validação de inputs e tratamento de erros robusto
+  - Logging configurado para debugging
+
+- **T-020**: Implementado `SearXNGManager` em `manager.py`
+  - Circuit breaker com estados CLOSED → OPEN → HALF_OPEN
+  - TTL de 5 minutos para transição OPEN → HALF_OPEN
+  - Método `search()` com fallback automático entre instâncias
+  - `_try_instance()` para requisições assíncronas
+  - `get_status_summary()` para debugging
+  - `reset_circuit()` para reset manual
 
 ### 2025-10-05 (continuação)
 - **T-010**: Implementado `discovery.py`

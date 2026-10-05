@@ -20,7 +20,7 @@
   - `https://xka.cz`
 
 ### Fase 3: Gerenciamento de Pool
-- [ ] **T-020**: Implementar `SearXNGManager` em `manager.py`
+- [x] **T-020**: Implementar `SearXNGManager` em `manager.py` ✅
   - Carregar instâncias via `InstanceDiscovery`
   - Implementar circuit breaker:
     - Estados: CLOSED, OPEN, HALF_OPEN
@@ -29,11 +29,11 @@
   - Tracking de instância usada (para logs/debug)
 
 ### Fase 4: Servidor MCP
-- [ ] **T-030**: Implementar `server.py` com SDK MCP
+- [x] **T-030**: Implementar `server.py` com SDK MCP ✅
   - Expor ferramenta `web_search(query, results_limit)`
   - Validar inputs
   - Tratar erros e retornar resposta padronizada
-- [ ] **T-031**: Implementar `main()` com initialization do servidor
+- [x] **T-031**: Implementar `main()` com initialization do servidor ✅
 
 ### Fase 5: Configuração Pi
 - [ ] **T-040**: Criar `.pi/mcp.json` com configuração do servidor
