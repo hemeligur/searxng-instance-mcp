@@ -12,6 +12,30 @@
 
 ---
 
+## Documentação (2025-10-06 - Atualizada)
+
+### Documentação Criada
+- `docs/developer/arquitetura.md` - Visão técnica da arquitetura com diagramas
+- `docs/usuario/troubleshooting.md` - Guia de troubleshooting completo
+
+### Documentação Atualizada
+- `README.md` - Reestruturado como porta de entrada com links para docs/
+
+### Estrutura de Documentação (reorganizada em 2025-10-06)
+```
+docs/
+├── usuario/                 # Documentação para usuários
+│   ├── searxng-guide.md    # Guia SearXNG (movido da raiz)
+│   └── troubleshooting.md   # Troubleshooting
+├── developer/               # Documentação para desenvolvedores
+│   ├── arquitetura.md      # Arquitetura técnica
+│   └── mcp-debug-report.md # Debug history
+└── skill/                   # Skills do Pi
+    └── searxng-skill.md   # Skill (movido da raiz)
+```
+
+---
+
 ## Status Atual
 ✅ **PRODUTO PRONTO** - MCP funcionando globalmente no Pi
 

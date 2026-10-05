@@ -89,3 +89,24 @@
 - Exposure: `direct`
 - Configuração local `.pi/mcp.json` removida
 - Tool disponível via: `mcp__searxng_web_search__web_search`
+
+### 2025-10-06 (Documentação)
+- **Skill document-system executada**
+- **Documentação criada:**
+  - `docs/developer/arquitetura.md` - Documentação técnica completa com diagramas
+  - `docs/usuario/troubleshooting.md` - Guia de troubleshooting com problemas comuns
+- **README.md atualizado:**
+  - Seção de documentação reestruturada
+  - Links para docs/ adicionados
+  - Quick Start adicionado
+  - Seção de troubleshooting referenciando docs/
+
+### 2025-10-06 (Reorganização de Docs)
+- **Docs movidos da raiz para docs/:**
+  - `SearXNG-Busca-Web.md` → `docs/usuario/searxng-guide.md`
+  - `searxng-skill.md` → `docs/skill/searxng-skill.md`
+- **Diretórios criados:** `docs/usuario/`, `docs/developer/`, `docs/skill/`
+- **README.md atualizado com novos caminhos de links**
+- **Memory Bank atualizado:**
+  - 06-activeContext.md atualizado com nova estrutura
+  - 05-progress.md atualizado com reorganização

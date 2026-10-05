@@ -1,66 +1,89 @@
 # SearXNG Instance MCP
 
-MCP Server for web search via SearXNG meta-search engine with automatic instance fallback.
+MCP Server para busca web via SearXNG com fallback automático entre instâncias.
 
-## Features
+## O que é?
 
-- 🔍 **Web Search**: Search the web using SearXNG meta-search engine
-- 🔄 **Automatic Fallback**: Seamlessly switches between instances when one fails
-- 🛡️ **Circuit Breaker**: Intelligent retry logic with circuit breaker pattern
-- 🌐 **Dynamic Discovery**: Auto-discovers healthy instances from searx.space
-- 💾 **Local Cache**: Caches instance list for faster startup
+Este servidor MCP permite que agentes de IA façam buscas na web de forma privada, usando o meta-buscador SearXNG. Ele gerencia automaticamente múltiplas instâncias, tentando alternativas quando uma falha.
 
-## Installation
+**Características:**
+- 🔍 **Busca Web Privada**: Agrega resultados de múltiplos buscadores sem rastrear
+- 🔄 **Fallback Automático**: Troca transparente entre instâncias quando uma falha
+- 🛡️ **Circuit Breaker**: Protege contra instâncias com problemas
+- 🌐 **Discovery Dinâmico**: Descobre instâncias saudáveis automaticamente
+- 💾 **Cache Local**: Inicialização rápida com cache de instâncias
+
+## Documentação
+
+### Para Usuários
+- [Guia SearXNG](docs/usuario/searxng-guide.md) - Como usar SearXNG para busca web
+- [Troubleshooting](docs/usuario/troubleshooting.md) - Solução de problemas comuns
+
+### Para Desenvolvedores
+- [Arquitetura](docs/developer/arquitetura.md) - Visão técnica da arquitetura
+- [Debug Report](docs/developer/mcp-debug-report.md) - Histórico de debugging do MCP
+
+### Skills
+- [SearXNG Skill](docs/skill/searxng-skill.md) - Skill para usar no Pi
+
+## Quick Start
+
+### Instalação
 
 ```bash
-# Clone the repository
+# Clone o repositório
 git clone https://github.com/hemeligur/searxng-instance-mcp.git
 cd searxng-instance-mcp
 
-# Install dependencies
+# Instale dependências
 uv sync
 ```
 
-## Usage
+### Uso com Pi
 
-### As MCP Server
-
-Register with Pi:
 ```bash
+# Adicione ao Pi
 pi mcp add -l searxng-web-search -- uv run python -m searxng_mcp
 ```
 
-Or use the project configuration:
-```bash
-# Copy .pi/mcp.json to your project
-# The server will be auto-discovered by Pi
-```
-
-### Command Line
+### Uso Direto
 
 ```bash
-# Start the server (stdio mode)
+# Inicie o servidor (modo stdio)
 uv run python -m searxng_mcp
 ```
 
-## Configuration
+### Uso como Tool
 
-### Environment Variables
+```javascript
+// No Pi ou outro cliente MCP
+mcp__searxng_web_search__web_search({query: "python programming", results_limit: 5})
+```
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SEARXNG_CACHE_TTL` | `3600` | Cache TTL in seconds (1 hour) |
-| `SEARXNG_TIMEOUT` | `10` | Request timeout in seconds |
-| `SEARXNG_INSTANCES` | (auto-discovered) | Comma-separated list of instances |
+## Configuração
 
-### Custom Instances
+### Variáveis de Ambiente
+
+| Variável | Padrão | Descrição |
+|----------|--------|-----------|
+| `SEARXNG_CACHE_TTL` | `3600` | TTL do cache em segundos (1 hora) |
+| `SEARXNG_TIMEOUT` | `10` | Timeout da requisição em segundos |
+| `SEARXNG_INSTANCES` | (auto-discovered) | Lista de instâncias separada por vírgulas |
+
+### Exemplo
 
 ```bash
-# Override default instances
+# Cache curto para desenvolvimento
+SEARXNG_CACHE_TTL=60 uv run python -m searxng_mcp
+
+# Timeout maior para conexões lentas
+SEARXNG_TIMEOUT=30 uv run python -m searxng_mcp
+
+# Instâncias específicas
 SEARXNG_INSTANCES="https://sx.xo.st,https://searxng.org" uv run python -m searxng_mcp
 ```
 
-## MCP Tool
+## API da Tool
 
 ### web_search
 
@@ -77,7 +100,7 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://searxng.org" uv run python -m searxn
       },
       "results_limit": {
         "type": "number",
-        "description": "Número máximo de resultados",
+        "description": "Número máximo de resultados (1-50)",
         "default": 10
       }
     },
@@ -86,7 +109,7 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://searxng.org" uv run python -m searxn
 }
 ```
 
-### Example Response
+### Exemplo de Resposta
 
 ```json
 {
@@ -96,7 +119,7 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://searxng.org" uv run python -m searxn
     {
       "url": "https://www.python.org/",
       "title": "Welcome to Python.org",
-      "content": "...",
+      "content": "Experienced programmers in any other language...",
       "engine": "bing"
     }
   ],
@@ -105,51 +128,140 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://searxng.org" uv run python -m searxn
 }
 ```
 
-## Architecture
+### Resposta de Erro
+
+```json
+{
+  "success": false,
+  "error": "All instances unavailable",
+  "message": "Failed to search using any available instance.",
+  "details": [
+    {"instance": "sx.xo.st", "error": "Request timeout"},
+    {"instance": "xka.cz", "error": "Rate limited (429)"}
+  ]
+}
+```
+
+## Arquitetura
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Client    │────▶│  SearXNG MCP     │────▶│  Instance       │
-│   (agent)   │◀────│  Server          │◀────│  Discovery      │
+│   Cliente   │────▶│  SearXNG MCP     │────▶│  Discovery      │
+│   (agente)  │◀────│  Server          │◀────│  (searx.space) │
 └─────────────┘     └──────────────────┘     └─────────────────┘
                            │                        │
                            ▼                        ▼
                     ┌──────────────────┐     ┌─────────────────┐
-                    │  SearXNGManager  │     │  searx.space    │
-                    │  (pool + retry)  │     │  (API JSON)     │
+                    │  SearXNGManager   │     │  Cache Local    │
+                    │  (pool + retry)  │     │  (~/.cache/)    │
                     └──────────────────┘     └─────────────────┘
+```
+
+### Componentes
+
+| Componente | Arquivo | Responsabilidade |
+|------------|---------|-----------------|
+| Server | `server.py` | Interface MCP (FastMCP) |
+| Manager | `manager.py` | Pool de instâncias + Circuit Breaker |
+| Discovery | `discovery.py` | Busca e filtra instâncias do searx.space |
+| Models | `models.py` | Tipos de dados |
+| Constants | `constants.py` | Configurações |
+
+### Circuit Breaker
+
+```
+CLOSED ──(3 falhas)──▶ OPEN ──(5 min)──▶ HALF_OPEN ──(sucesso)──▶ CLOSED
+                                                      │
+                                                      └──(falha)──▶ OPEN
+```
+
+## Desenvolvimento
+
+### Pré-requisitos
+- Python 3.10+
+- [uv](https://github.com/astral-sh/uv)
+
+### Setup
+
+```bash
+# Instalar dependências
+uv sync
+
+# Instalar dev dependencies
+uv sync --extra dev
+```
+
+### Comandos Úteis
+
+```bash
+# Type checking
+uv run pyright src/
+
+# Linting
+uv run ruff check src/
+
+# Testes
+uv run pytest
+
+# Com coverage
+uv run pytest --cov=src/searxng_mcp --cov-report=term-missing
+```
+
+### Estrutura do Projeto
+
+```
+searxng-instance-mcp/
+├── src/searxng_mcp/
+│   ├── __init__.py          # Exports
+│   ├── __main__.py          # Entry point
+│   ├── server.py            # FastMCP server
+│   ├── manager.py           # Pool + circuit breaker
+│   ├── discovery.py         # Instance discovery
+│   ├── models.py            # Data models
+│   └── constants.py         # Configuration
+├── tests/                   # 27 testes pytest
+├── docs/
+│   ├── usuario/             # Documentação para usuários
+│   │   ├── searxng-guide.md
+│   │   └── troubleshooting.md
+│   ├── developer/           # Documentação para desenvolvedores
+│   │   ├── arquitetura.md
+│   │   └── mcp-debug-report.md
+│   └── skill/               # Skills do Pi
+│       └── searxng-skill.md
+├── memory-bank/             # Contexto do projeto
+├── pyproject.toml
+└── README.md
 ```
 
 ## Troubleshooting
 
-### All instances failing
+### Problemas Comuns
 
-1. Check your internet connection
-2. Verify instances are online at https://searx.space
-3. Try setting custom instances via `SEARXNG_INSTANCES`
+1. **"All instances unavailable"**
+   - Sem internet ou todas as instâncias com rate limit
+   - Solução: `rm -rf ~/.cache/searxng-mcp/`
 
-### Rate limiting
+2. **Rate Limiting (429)**
+   - Aguarde alguns minutos
+   - Sistema faz fallback automaticamente
 
-Wait a few minutes and retry. The circuit breaker will automatically recover.
+3. **Timeout**
+   - Aumente `SEARXNG_TIMEOUT` se necessário
 
-### Cache issues
+Consulte [docs/usuario/troubleshooting.md](docs/usuario/troubleshooting.md) para problemas detalhados.
 
-Clear the cache:
+### Debugging
+
 ```bash
+# Ver cache
+cat ~/.cache/searxng-mcp/instances.json | jq .
+
+# Limpar cache
 rm -rf ~/.cache/searxng-mcp/
-```
 
-## Development
-
-```bash
-# Install dev dependencies
-uv sync --extra dev
-
-# Type checking
-uv run --tool pyright src/
-
-# Run tests
-uv run pytest
+# Testar diretamente
+uv run python -c "from searxng_mcp.manager import SearXNGManager; import asyncio; print(asyncio.run(SearXNGManager().search('test', 3)))"
 ```
 
 ## License
