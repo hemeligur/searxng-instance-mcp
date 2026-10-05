@@ -1,7 +1,7 @@
 # Active Context
 
 ## Tarefa Atual
-📋 **Aguardando Testes** - Fase 7 do backlog
+📋 **Testes Implementados** - Fase 7 concluída
 
 ## Decisões Recentes
 
@@ -25,9 +25,9 @@
 
 ## Próximos Passos Imediatos
 
-1. **T-060**: Teste básico de conexão com instância SearXNG
-2. **T-061**: Teste de fallback (simular falha de instância)
-3. **T-062**: Teste de cache de instâncias
+1. Executar testes: `uv sync --extra dev && uv run pytest tests/ -v`
+2. Commit das alterações: `test: add pytest suite (T-060, T-061, T-062)`
+3. Push para origin
 
 ## Perguntas em Aberto
 

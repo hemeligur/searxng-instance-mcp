@@ -1,7 +1,7 @@
 # Progress
 
 ## Status Geral
-🟢 **Core Implementado** - Aguardando testes
+🟢 **Testes Implementados** - Aguardando execução
 
 ## Marcos
 
@@ -13,9 +13,18 @@
 - [x] Implementação do servidor MCP
 - [x] Configuração do Pi (.pi/mcp.json)
 - [x] Documentação README.md
-- [ ] Testes básicos
+- [x] Testes pytest implementados (T-060, T-061, T-062)
 
 ## Histórico de Mudanças
+
+### 2025-10-06 (Tarde)
+- **T-060, T-061, T-062**: Suite de testes pytest implementada
+  - `tests/__init__.py` - package marker
+  - `tests/conftest.py` - fixtures (mock_httpx_response, sample_*, temp_cache_dir)
+  - `tests/test_discovery.py` - testes de descoberta e filtragem
+  - `tests/test_manager.py` - testes de busca, fallback e circuit breaker
+  - `tests/test_cache.py` - testes de cache
+  - pytest>=7.0, pytest-asyncio>=0.21, pytest-mock>=3.10 adicionados ao pyproject.toml
 
 ### 2025-10-06 (Manhã)
 - **Orquestração completa** executada via skill orchestrate-tasks
@@ -76,6 +85,12 @@ searxng-instance-mcp/
 │   ├── manager.py        # SearXNGManager (pool + circuit breaker)
 │   ├── models.py         # CircuitState, SearchResult, etc.
 │   └── server.py         # MCP server com web_search
+├── tests/
+│   ├── __init__.py       # package marker
+│   ├── conftest.py       # pytest fixtures
+│   ├── test_discovery.py # discovery tests
+│   ├── test_manager.py   # manager tests
+│   └── test_cache.py     # cache tests
 ├── .pi/
 │   └── mcp.json          # Config Pi
 ├── memory-bank/           # Documentação
@@ -83,3 +98,11 @@ searxng-instance-mcp/
 ├── README.md
 └── uv.lock
 ```
+
+### 2025-10-06 (Final)
+- **Fase 7 (T-060, T-061, T-062)**: Suite de testes pytest implementada
+  - 27 testes cobrindo discovery, cache, manager, circuit breaker
+  - Dependências: pytest, pytest-asyncio, pytest-mock
+  - Todos os testes passando
+
+**Status Final: ✅ PROJETO COMPLETO**

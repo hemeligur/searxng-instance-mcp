@@ -34,16 +34,23 @@ class SearXNGManager:
         or falls back to hardcoded instances if discovery fails.
         """
         try:
-            # Sync wrapper for async discover_instances
             import asyncio
-
-            instances = asyncio.run(discover_instances(use_cache=True))
-            for url in instances:
-                self.instances[url] = InstanceStatus(url=url)
-            logger.info(f"Loaded {len(instances)} instances from discovery")
-        except Exception as e:
-            logger.warning(f"Failed to discover instances: {e}, using fallback")
+            
+            # Check if we're already in an event loop
+            loop = asyncio.get_running_loop()
+            # If we get here, we're in an async context - defer to sync fallback
+            logger.warning("Cannot use async discovery from async context, using fallback")
             self._load_fallback_instances()
+        except RuntimeError:
+            # No running event loop - safe to use asyncio.run()
+            try:
+                instances = asyncio.run(discover_instances(use_cache=True))
+                for url in instances:
+                    self.instances[url] = InstanceStatus(url=url)
+                logger.info(f"Loaded {len(instances)} instances from discovery")
+            except Exception as e:
+                logger.warning(f"Failed to discover instances: {e}, using fallback")
+                self._load_fallback_instances()
 
     def _load_fallback_instances(self) -> None:
         """Load fallback instances."""

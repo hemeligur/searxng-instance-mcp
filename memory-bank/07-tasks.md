@@ -49,9 +49,9 @@
   - Troubleshooting
 
 ### Fase 7: Testes
-- [ ] **T-060**: Teste básico de conexão com instância
-- [ ] **T-061**: Teste de fallback (forçar falha de uma instância)
-- [ ] **T-062**: Teste de cache de instâncias
+- [x] **T-060**: Teste básico de conexão com instância ✅
+- [x] **T-061**: Teste de fallback (forçar falha de uma instância) ✅
+- [x] **T-062**: Teste de cache de instâncias ✅
 
 ---
 
