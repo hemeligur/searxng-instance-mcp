@@ -1,7 +1,7 @@
 # Progress
 
 ## Status Geral
-🟢 **Testes Implementados** - Aguardando execução
+🟢 **PROJETO COMPLETO** - Servidor MCP funcionando globalmente no Pi
 
 ## Marcos
 
@@ -69,55 +69,24 @@
   - README.md criado
   - Dependências instaladas via `uv sync`
 
-## Repositório
-
-**URL:** https://github.com/hemeligur/searxng-instance-mcp  
-**Visibilidade:** 🔒 PRIVATE
-
-## Estrutura do Projeto
-
-```
-searxng-instance-mcp/
-├── src/searxng_mcp/
-│   ├── __init__.py       # exports main
-│   ├── constants.py      # FALLBACK_INSTANCES, configs
-│   ├── discovery.py      # InstanceDiscovery (searx.space API)
-│   ├── manager.py        # SearXNGManager (pool + circuit breaker)
-│   ├── models.py         # CircuitState, SearchResult, etc.
-│   └── server.py         # MCP server com web_search
-├── tests/
-│   ├── __init__.py       # package marker
-│   ├── conftest.py       # pytest fixtures
-│   ├── test_discovery.py # discovery tests
-│   ├── test_manager.py   # manager tests
-│   └── test_cache.py     # cache tests
-├── .pi/
-│   └── mcp.json          # Config Pi
-├── memory-bank/           # Documentação
-├── pyproject.toml
-├── README.md
-└── uv.lock
-```
-
-### 2025-10-06 (Final)
+### 2025-10-06 (Final - COMPLETO)
 - **Fase 7 (T-060, T-061, T-062)**: Suite de testes pytest implementada
   - 27 testes cobrindo discovery, cache, manager, circuit breaker
   - Dependências: pytest, pytest-asyncio, pytest-mock
   - Todos os testes passando
 
-**Status Final: ✅ PROJETO COMPLETO**
-
-### 2025-10-06 (Pi Integration)
-- MCP configurado e funcionando no Pi
-- Servidor registrado via `pi mcp add -l searxng-web-search`
-- Tool `web_search` disponível
-- Correção das assinaturas dos handlers MCP
-
-### 2025-10-06 (Debug - RESOLVIDO)
+### 2025-10-06 (MCP Bug Fix - RESOLVIDO)
 - **Problema:** `Invalid request parameters` ao chamar web_search via Pi
 - **Causa:** API antiga do MCP SDK incompatível com protocolo moderno do Pi
 - **Solução:** Migrou de `mcp[cli]>=1.0.0` para `fastmcp>=4.0.0`
 - **Código novo:** Usa decorator `@mcp.tool()` em vez de `add_request_handler`
-- **Commit:** `0822031` no branch `fix/fastmcp-migration`
+- **Branch:** `fix/fastmcp-migration`
+- **PR:** #1 mesclado na main
+- **Commit merge:** `5716722`
 - **Testes:** 27 testes passando ✅
-- **Pi:** Ferramenta funcionando corretamente via `mcp__searxng_web_search__web_search`
+
+### 2025-10-06 (Global Setup)
+- Servidor registrado globalmente em `/home/guilherme/.pi/agent/mcp.json`
+- Exposure: `direct`
+- Configuração local `.pi/mcp.json` removida
+- Tool disponível via: `mcp__searxng_web_search__web_search`
