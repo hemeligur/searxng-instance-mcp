@@ -6,7 +6,7 @@ import logging
 import sys
 from typing import Any
 
-from mcp.server import Server
+from mcp.server import Server, ServerRequestContext
 from mcp.server.stdio import stdio_server
 from mcp.types import (
     TextContent,
@@ -33,7 +33,9 @@ VERSION = "0.1.0"
 server = Server(APP_NAME, version=VERSION)
 
 
-async def list_tools_handler(request: ListToolsRequest) -> ListToolsResult:
+async def list_tools_handler(
+    ctx: ServerRequestContext, params: ListToolsRequest
+) -> ListToolsResult:
     """Handle list_tools requests from MCP clients."""
     return ListToolsResult(
         tools=[
@@ -60,13 +62,14 @@ async def list_tools_handler(request: ListToolsRequest) -> ListToolsResult:
     )
 
 
-async def call_tool_handler(request: CallToolRequest, name: str, arguments: dict[str, Any]) -> CallToolResult:
+async def call_tool_handler(
+    ctx: ServerRequestContext, params: CallToolRequest
+) -> CallToolResult:
     """Handle tool call requests from MCP clients.
 
     Args:
-        request: The original request object.
-        name: The name of the tool being called.
-        arguments: The arguments passed to the tool.
+        ctx: The server request context.
+        params: The call tool request parameters containing name and arguments.
 
     Returns:
         CallToolResult containing the search results or error.
@@ -74,6 +77,9 @@ async def call_tool_handler(request: CallToolRequest, name: str, arguments: dict
     Raises:
         ValueError: If the tool name is unknown or arguments are invalid.
     """
+    name = params.name
+    arguments = params.arguments or {}
+
     if name == "web_search":
         query = arguments.get("query")
         if not query or not isinstance(query, str):
@@ -118,7 +124,7 @@ async def call_tool_handler(request: CallToolRequest, name: str, arguments: dict
         raise ValueError(f"Unknown tool: {name}")
 
 
-# Register handlers with the server
+# Register handlers with the server (using string method names)
 server.add_request_handler("tools/list", ListToolsRequest, list_tools_handler)
 server.add_request_handler("tools/call", CallToolRequest, call_tool_handler)
 
