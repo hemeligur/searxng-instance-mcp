@@ -3,10 +3,10 @@
 ## Backlog
 
 ### Fase 1: Estrutura Base
-- [ ] **T-001**: Criar `pyproject.toml` com dependências (mcp[cli], httpx, tenacity)
-- [ ] **T-002**: Criar estrutura de diretórios `src/searxng_mcp/`
-- [ ] **T-003**: Criar `src/searxng_mcp/__init__.py` exportando servidor
-- [ ] **T-004**: Criar `src/searxng_mcp/models.py` com dataclasses
+- [x] **T-001**: Criar `pyproject.toml` com dependências (mcp[cli], httpx, tenacity)
+- [x] **T-002**: Criar estrutura de diretórios `src/searxng_mcp/`
+- [x] **T-003**: Criar `src/searxng_mcp/__init__.py` exportando servidor
+- [x] **T-004**: Criar `src/searxng_mcp/models.py` com dataclasses
 
 ### Fase 2: Discovery Dinâmico
 - [ ] **T-010**: Implementar `InstanceDiscovery` em `discovery.py`
