@@ -43,20 +43,12 @@ async def list_tools_handler(
                 name="web_search",
                 description="Busca na web usando meta-buscador SearXNG com fallback automático entre instâncias",
                 inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Termo de busca para pesquisar na web",
-                        },
-                        "results_limit": {
-                            "type": "number",
-                            "description": "Número máximo de resultados a retornar (default: 10)",
-                            "default": 10,
-                        },
-                    },
-                    "required": ["query"],
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string"},
                 },
+                "required": ["query"],
+            },
             )
         ]
     )
@@ -65,63 +57,34 @@ async def list_tools_handler(
 async def call_tool_handler(
     ctx: ServerRequestContext, params: CallToolRequest
 ) -> CallToolResult:
-    """Handle tool call requests from MCP clients.
-
-    Args:
-        ctx: The server request context.
-        params: The call tool request parameters containing name and arguments.
-
-    Returns:
-        CallToolResult containing the search results or error.
-
-    Raises:
-        ValueError: If the tool name is unknown or arguments are invalid.
-    """
+    """Handle tool call requests from MCP clients."""
     name = params.name
     arguments = params.arguments or {}
+    logger.info(f"call_tool called: {name}, args={arguments}")
 
     if name == "web_search":
         query = arguments.get("query")
-        if not query or not isinstance(query, str):
-            raise ValueError("Invalid query: must be a non-empty string")
+        if not query:
+            raise ValueError("query is required")
 
         limit = arguments.get("results_limit", 10)
-        if not isinstance(limit, (int, float)):
-            limit = 10
-        limit = max(1, min(int(limit), 50))  # Clamp between 1 and 50
-
-        logger.info(f"Processing web_search: query='{query}', limit={limit}")
+        limit = max(1, min(int(limit), 50))
 
         try:
             manager = SearXNGManager()
             result = await manager.search(query, limit)
-            result_dict = result.to_dict()
-
-            logger.info(
-                f"Search completed: success={result.success}, "
-                f"results={result.count}, instance={result.instance_used}"
-            )
-
             return CallToolResult(
-                content=[TextContent(type="text", text=json.dumps(result_dict, ensure_ascii=False, indent=2))],
-                isError=not result.success,
+                content=[TextContent(type="text", text=json.dumps(result.to_dict(), ensure_ascii=False))],
+                is_error=not result.success,
             )
-
         except Exception as e:
-            logger.error(f"Search failed with exception: {e}")
-            error_response = {
-                "success": False,
-                "query": query,
-                "error": "Search execution failed",
-                "message": str(e),
-            }
+            logger.error(f"Search failed: {e}")
             return CallToolResult(
-                content=[TextContent(type="text", text=json.dumps(error_response, ensure_ascii=False, indent=2))],
-                isError=True,
+                content=[TextContent(type="text", text=json.dumps({"error": str(e)}))],
+                is_error=True,
             )
 
-    else:
-        raise ValueError(f"Unknown tool: {name}")
+    raise ValueError(f"Unknown tool: {name}")
 
 
 # Register handlers with the server (using string method names)
