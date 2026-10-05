@@ -36,11 +36,12 @@
 - [x] **T-031**: Implementar `main()` com initialization do servidor ✅
 
 ### Fase 5: Configuração Pi
-- [ ] **T-040**: Criar `.pi/mcp.json` com configuração do servidor
-- [ ] **T-041**: Documentar comando de registro: `pi mcp add searxng-web-search -- uv run python -m searxng_mcp`
+- [x] **T-040**: Criar `.pi/mcp.json` com configuração do servidor ✅
+- [x] **T-041**: Documentar comando de registro ✅
+  - `pi mcp add searxng-web-search -- uv run python -m searxng_mcp`
 
 ### Fase 6: Documentação
-- [ ] **T-050**: Criar `README.md` com:
+- [x] **T-050**: Criar `README.md` com: ✅
   - Instalação (`uv sync`)
   - Uso da ferramenta `web_search`
   - Configuração de instâncias customizadas
