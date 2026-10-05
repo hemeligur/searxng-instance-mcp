@@ -112,3 +112,11 @@ searxng-instance-mcp/
 - Servidor registrado via `pi mcp add -l searxng-web-search`
 - Tool `web_search` disponível
 - Correção das assinaturas dos handlers MCP
+
+### 2025-10-06 (Debug - Problema Não Resolvido)
+- **Problema:** `Invalid request parameters` ao chamar web_search via Pi
+- **Causa:** Pi valida parâmetros antes de enviar ao servidor
+- **Testes:** 8 tentativas de solução falharam
+- **Status:** Servidor conecta, lista ferramenta, mas chamada falha
+- **Workaround:** Usar `mcp__webscout__DuckDuckGoWebSearch` funciona
+- **Documentação:** `docs/mcp-debug-report.md` criado

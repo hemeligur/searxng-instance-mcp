@@ -1,73 +1,69 @@
 # Active Context
 
-## Tarefa Atual
-📋 **Testes Implementados** - Fase 7 concluída
+## Status Atual
+📋 **Problema em Investigação** - MCP conecta mas chamada falha
+
+## Problema: "Invalid request parameters"
+
+O servidor MCP SearXNG conecta e lista a ferramenta `web_search` corretamente, mas quando o Pi tenta chamar a ferramenta, ocorre erro de validação **antes** de enviar a requisição ao servidor.
+
+### Sintoma
+```javascript
+mcp__searxng_web_search__web_search({query: "python"})
+// → "Invalid request parameters"
+```
+
+### Testes Realizados
+| Teste | Resultado |
+|-------|-----------|
+| `pi mcp list` | ✅ mostra web_search |
+| `uv run python -m searxng_mcp` | ✅ inicia servidor |
+| Teste direto do manager | ✅ retorna resultados |
+| Chamada via Pi | ❌ Invalid request parameters |
+
+### Tentativas de Solução
+1. ✅ Schema minimalista
+2. ✅ Schema com títulos
+3. ✅ Schema com $schema
+4. ✅ Remover propriedades opcionais
+5. ✅ Mudar exposure para direct
+6. ✅ Registro global
+7. ✅ Simplificar handler
+8. ✅ Corrigir is_error vs isError
+
+**Todas falharam com o mesmo erro.**
+
+### Hipótese
+Pi valida os parâmetros localmente antes de enviar ao servidor MCP.
 
 ## Decisões Recentes
 
 | Data | Decisão | Justificativa |
 |------|---------|---------------|
-| 2025-10-05 | Discovery dinâmico via searx.space API | Evitar hardcoding, usar instâncias verificadas |
-| 2025-10-05 | Python com uv | Stack moderna, gerenciamento fácil |
-| 2025-10-05 | Cache local em ~/.cache/ | Reduzir chamadas à API, melhorar performance |
-| 2025-10-05 | Circuit breaker com TTL 5min | Evitar usar instâncias problemáticas |
-| 2025-10-06 | API MCP via add_request_handler | Correção após erro de API |
+| 2025-10-06 | Criar docs/mcp-debug-report.md | Documentar problema para referência |
+| 2025-10-06 | Manter servidor registrado | Facilita testes quando solução encontrada |
+| 2025-10-06 | Corrigir is_error | MCP SDK usa is_error, não isError |
 
-## Validações Realizadas
+## Alternativa Temporária
 
-| Teste | Resultado | Observação |
-|-------|-----------|------------|
-| Import all modules | ✅ OK | Todos os módulos importam corretamente |
-| Server name | ✅ OK | `searxng-web-search` |
-| Fallback instances | ✅ OK | 4 instâncias configuradas |
-| MCP SDK | ✅ OK | Handlers registrados corretamente |
-| Type hints | ⚠️ Pendente | pyright não executado |
-
-## Próximos Passos Imediatos
-
-1. Executar testes: `uv sync --extra dev && uv run pytest tests/ -v`
-2. Commit das alterações: `test: add pytest suite (T-060, T-061, T-062)`
-3. Push para origin
-
-## Perguntas em Aberto
-
-1. **Devo adicionar testes automatizados com pytest?**
-   - Consideração: pytest já suportado, mas não instalado
-   - Alternativa: pytest opcional em `dev` extras
-
-2. **Quando o servidor iniciar, deve fazer discovery imediatamente?**
-   - Consideração: Pode adicionar latência
-   - Alternativa: Lazy discovery (só busca quando necessário)
-
-## Conhecimento Adquirido
-
-### API MCP SDK
-- `Server.add_request_handler(method, RequestType, handler)` registra handlers
-- `ListToolsResult` e `CallToolResult` são os tipos de retorno
-- `TextContent(type="text", text=...)` para conteúdo de texto
-
-### Padrões Implementados
-- **Circuit Breaker**: CLOSED → OPEN → HALF_OPEN (3 falhas = OPEN, TTL 5min)
-- **Fallback em Cascata**: tenta próxima instância se anterior falhar
-- **Cache com TTL**: ~/.cache/searxng-mcp/instances.json (1 hora)
+Usar webscout que funciona:
+```javascript
+mcp__webscout__DuckDuckGoWebSearch({query: "python"})
+// ✅ Funciona corretamente
+```
 
 ## Notas de Debug
 
 ### API MCP - Handler Signatures
 ```python
 # ✅ Correto - handlers recebem (ctx, params)
-async def list_tools_handler(
-    ctx: ServerRequestContext, 
-    params: ListToolsRequest
-) -> ListToolsResult:
+async def list_tools_handler(ctx, params) -> ListToolsResult:
     return ListToolsResult(tools=[...])
 
-async def call_tool_handler(
-    ctx: ServerRequestContext, 
-    params: CallToolRequest
-) -> CallToolResult:
-    # params.name e params.arguments
-    ...
+async def call_tool_handler(ctx, params) -> CallToolResult:
+    name = params.name
+    arguments = params.arguments or {}
+    # ...
 
 server.add_request_handler("tools/list", ListToolsRequest, list_tools_handler)
 server.add_request_handler("tools/call", CallToolRequest, call_tool_handler)
@@ -75,21 +71,53 @@ server.add_request_handler("tools/call", CallToolRequest, call_tool_handler)
 
 ### Para executar como módulo
 ```bash
-# Precisa de __main__.py
 uv run python -m searxng_mcp
 ```
 
 ### Registrar no Pi
 ```bash
 pi mcp add -l searxng-web-search -- uv run python -m searxng_mcp
-pi mcp list  # verificar conexão
 ```
 
-### Para Testar Manualmente
+### Testar diretamente
 ```bash
-# Listar instâncias
-uv run python -c "from searxng_mcp.discovery import discover_instances; import asyncio; print(asyncio.run(discover_instances()))"
+uv run python -c "
+from searxng_mcp.manager import SearXNGManager
+import asyncio
+m = SearXNGManager()
+print(asyncio.run(m.search('python', 3)))
+"
+```
 
-# Testar busca
-uv run python -c "from searxng_mcp.manager import SearXNGManager; import asyncio; m = SearXNGManager(); print(asyncio.run(m.search('python', 5)))"
+## Próximos Passos
+
+1. [ ] Testar com cliente MCP diferente (Claude Desktop, Cursor)
+2. [ ] Reportar issue no Pi ou MCP SDK
+3. [ ] Aguardar atualização do Pi/MCP SDK
+4. [ ] Investigar código-fonte do Pi para validação
+
+## Repositório
+
+**URL:** https://github.com/hemeligur/searxng-instance-mcp  
+**Branch:** main  
+**Último commit:** `1d6d0f6` - fix: simplify tool schema and handler
+
+## Estrutura do Projeto
+
+```
+searxng-instance-mcp/
+├── src/searxng_mcp/
+│   ├── __init__.py       # exports main
+│   ├── __main__.py       # Entry point
+│   ├── constants.py      # FALLBACK_INSTANCES, configs
+│   ├── discovery.py      # InstanceDiscovery
+│   ├── manager.py        # SearXNGManager
+│   ├── models.py         # CircuitState, SearchResult
+│   └── server.py         # MCP server
+├── tests/                 # 27 testes
+├── docs/                  # Debug report
+├── .pi/mcp.json         # Config Pi
+├── pyproject.toml
+├── README.md
+└── memory-bank/          # Documentação
 ```
