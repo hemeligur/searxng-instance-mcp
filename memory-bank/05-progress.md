@@ -1,7 +1,7 @@
 # Progress
 
 ## Status Geral
-🟢 **Em Implementação** - Fase 4 concluída
+🟢 **Em Implementação** - Core concluído, faltando testes
 
 ## Marcos
 
@@ -11,7 +11,8 @@
 - [x] Implementação do discovery dinâmico
 - [x] Implementação do SearXNGManager
 - [x] Implementação do servidor MCP
-- [ ] Configuração do Pi (.pi/mcp.json)
+- [x] Configuração do Pi (.pi/mcp.json)
+- [x] Documentação README.md
 - [ ] Testes básicos
 
 ## Histórico de Mudanças

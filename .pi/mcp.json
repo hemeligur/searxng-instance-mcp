@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "searxng-web-search": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "searxng_mcp"],
+      "description": "Web search via SearXNG meta-search engine with automatic instance fallback",
+      "env": {
+        "SEARXNG_CACHE_TTL": "3600",
+        "SEARXNG_TIMEOUT": "10"
+      }
+    }
+  }
+}

@@ -8,7 +8,14 @@ from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import TextContent, Tool
+from mcp.types import (
+    TextContent,
+    Tool,
+    ListToolsRequest,
+    ListToolsResult,
+    CallToolRequest,
+    CallToolResult,
+)
 
 from .manager import SearXNGManager
 
@@ -21,49 +28,48 @@ logger = logging.getLogger(__name__)
 
 # Server instance
 APP_NAME = "searxng-web-search"
-server = Server(APP_NAME)
+VERSION = "0.1.0"
+
+server = Server(APP_NAME, version=VERSION)
 
 
-@server.list_tools()
-async def list_tools() -> list[Tool]:
-    """List available tools exposed by this MCP server.
-
-    Returns:
-        List containing the web_search tool definition.
-    """
-    return [
-        Tool(
-            name="web_search",
-            description="Busca na web usando meta-buscador SearXNG com fallback automático entre instâncias",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Termo de busca para pesquisar na web",
+async def list_tools_handler(request: ListToolsRequest) -> ListToolsResult:
+    """Handle list_tools requests from MCP clients."""
+    return ListToolsResult(
+        tools=[
+            Tool(
+                name="web_search",
+                description="Busca na web usando meta-buscador SearXNG com fallback automático entre instâncias",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Termo de busca para pesquisar na web",
+                        },
+                        "results_limit": {
+                            "type": "number",
+                            "description": "Número máximo de resultados a retornar (default: 10)",
+                            "default": 10,
+                        },
                     },
-                    "results_limit": {
-                        "type": "number",
-                        "description": "Número máximo de resultados a retornar (default: 10)",
-                        "default": 10,
-                    },
+                    "required": ["query"],
                 },
-                "required": ["query"],
-            },
-        )
-    ]
+            )
+        ]
+    )
 
 
-@server.call_tool()
-async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
-    """Handle tool calls from MCP clients.
+async def call_tool_handler(request: CallToolRequest, name: str, arguments: dict[str, Any]) -> CallToolResult:
+    """Handle tool call requests from MCP clients.
 
     Args:
+        request: The original request object.
         name: The name of the tool being called.
         arguments: The arguments passed to the tool.
 
     Returns:
-        List of TextContent objects containing the search results or error.
+        CallToolResult containing the search results or error.
 
     Raises:
         ValueError: If the tool name is unknown or arguments are invalid.
@@ -90,12 +96,10 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 f"results={result.count}, instance={result.instance_used}"
             )
 
-            return [
-                TextContent(
-                    type="text",
-                    text=json.dumps(result_dict, ensure_ascii=False, indent=2),
-                )
-            ]
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(result_dict, ensure_ascii=False, indent=2))],
+                isError=not result.success,
+            )
 
         except Exception as e:
             logger.error(f"Search failed with exception: {e}")
@@ -105,15 +109,18 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 "error": "Search execution failed",
                 "message": str(e),
             }
-            return [
-                TextContent(
-                    type="text",
-                    text=json.dumps(error_response, ensure_ascii=False, indent=2),
-                )
-            ]
+            return CallToolResult(
+                content=[TextContent(type="text", text=json.dumps(error_response, ensure_ascii=False, indent=2))],
+                isError=True,
+            )
 
     else:
         raise ValueError(f"Unknown tool: {name}")
+
+
+# Register handlers with the server
+server.add_request_handler("tools/list", ListToolsRequest, list_tools_handler)
+server.add_request_handler("tools/call", CallToolRequest, call_tool_handler)
 
 
 async def main() -> None:
@@ -122,7 +129,7 @@ async def main() -> None:
     Starts the stdio-based MCP server that listens for client connections
     and exposes the web_search tool.
     """
-    logger.info(f"Starting {APP_NAME} MCP server...")
+    logger.info(f"Starting {APP_NAME} v{VERSION} MCP server...")
 
     async with stdio_server() as (read_stream, write_stream):
         await server.run(
