@@ -1,40 +1,26 @@
 # Active Context
 
 ## Status Atual
-📋 **Problema em Investigação** - MCP conecta mas chamada falha
+✅ **RESOLVIDO** - MCP funcionando corretamente via FastMCP 4
 
-## Problema: "Invalid request parameters"
+## Solução Implementada (2025-10-06)
 
-O servidor MCP SearXNG conecta e lista a ferramenta `web_search` corretamente, mas quando o Pi tenta chamar a ferramenta, ocorre erro de validação **antes** de enviar a requisição ao servidor.
+### Problema Original
+O servidor MCP usava API antiga de baixo nível (`mcp[cli]>=1.0.0` com `add_request_handler`), que não era compatível com o protocolo moderno do Pi.
 
-### Sintoma
+### Correção
+- **Dependência**: `mcp[cli]>=1.0.0` → `fastmcp>=4.0.0`
+- **Código**: Reescrito `server.py` usando decorator `@mcp.tool()`
+- **Entry point**: Corrigido `__main__.py`
+
+### Resultado
 ```javascript
-mcp__searxng_web_search__web_search({query: "python"})
-// → "Invalid request parameters"
+mcp__searxng_web_search__web_search({query: "python", results_limit: 3})
+// ✅ Retorna 10 resultados do SearXNG
 ```
 
-### Testes Realizados
-| Teste | Resultado |
-|-------|-----------|
-| `pi mcp list` | ✅ mostra web_search |
-| `uv run python -m searxng_mcp` | ✅ inicia servidor |
-| Teste direto do manager | ✅ retorna resultados |
-| Chamada via Pi | ❌ Invalid request parameters |
-
-### Tentativas de Solução
-1. ✅ Schema minimalista
-2. ✅ Schema com títulos
-3. ✅ Schema com $schema
-4. ✅ Remover propriedades opcionais
-5. ✅ Mudar exposure para direct
-6. ✅ Registro global
-7. ✅ Simplificar handler
-8. ✅ Corrigir is_error vs isError
-
-**Todas falharam com o mesmo erro.**
-
-### Hipótese
-Pi valida os parâmetros localmente antes de enviar ao servidor MCP.
+### Branch
+`fix/fastmcp-migration` - commit `0822031`
 
 ## Decisões Recentes
 

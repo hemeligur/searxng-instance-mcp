@@ -7,7 +7,8 @@
         "python",
         "-m",
         "searxng_mcp"
-      ]
+      ],
+      "exposure": "direct"
     }
   }
 }

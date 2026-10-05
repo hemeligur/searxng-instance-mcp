@@ -194,3 +194,40 @@ RETRY_CONFIG = {
 3. **Logging** com `structlog` ou `loguru` para debugging
 4. **Type hints** em todas as funções públicas
 5. **Testar comuv run --tool pyright** para type checking
+
+---
+
+## Fix Realizado (2025-10-06)
+
+### Problema
+- Servidor MCP original usava API antiga (`mcp[cli]>=1.0.0` com `add_request_handler`)
+- Erro `Invalid request parameters` ao chamar via Pi
+
+### Solução
+- Migrou para **FastMCP 4** (`fastmcp>=4.0.0`)
+- Usa decorator `@mcp.tool()` em vez de handlers manuais
+- Schema de input gerado automaticamente via type hints
+
+### Commit
+- Branch: `fix/fastmcp-migration`
+- Commit: `0822031`
+
+### Código Antes/Depois
+
+**Antes (API antiga):**
+```python
+from mcp.server import Server
+server = Server(APP_NAME)
+server.add_request_handler("tools/list", ListToolsRequest, list_tools_handler)
+server.add_request_handler("tools/call", CallToolRequest, call_tool_handler)
+```
+
+**Depois (FastMCP):**
+```python
+from fastmcp import FastMCP
+mcp = FastMCP("searxng-web-search")
+
+@mcp.tool()
+async def web_search(query: str, results_limit: int = 10) -> str:
+    ...
+```

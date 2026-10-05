@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "mcp[cli]>=1.0.0",
+    "fastmcp>=4.0.0",
     "httpx>=0.25.0",
     "tenacity>=8.0.0",
 ]
@@ -62,4 +62,13 @@ pythonVersion = "3.10"
 typeCheckingMode = "basic"
 
 [tool.tenacity]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-mock>=3.16.0",
+    "ruff>=0.16.10",
+]
 # Configurações padrão para retry
