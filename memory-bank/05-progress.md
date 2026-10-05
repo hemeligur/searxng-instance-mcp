@@ -24,7 +24,7 @@
   - `tests/test_discovery.py` - testes de descoberta e filtragem
   - `tests/test_manager.py` - testes de busca, fallback e circuit breaker
   - `tests/test_cache.py` - testes de cache
-  - pytest>=7.0, pytest-asyncio>=0.21, pytest-mock>=3.10 adicionados ao pyproject.toml
+  - pytest>=9.1.1, pytest-asyncio>=1.4.0, pytest-mock>=3.16.0 adicionados ao pyproject.toml
 
 ### 2025-10-06 (Manhã)
 - **Orquestração completa** executada via skill orchestrate-tasks
@@ -46,8 +46,7 @@
   - `_try_instance()` para requisições assíncronas
   - `get_status_summary()` para debugging
   - `reset_circuit()` para reset manual
-- **T-030, T-031**: Corrigido servidor MCP
-  - API correta do MCP SDK (add_request_handler)
+- **T-030, T-031**: Implementado servidor MCP (posteriormente migrado para FastMCP)
   - Handler `list_tools_handler()` e `call_tool_handler()`
   - Validação de inputs e tratamento de erros robusto
 
@@ -64,7 +63,7 @@
 - Memory bank inicializado
 - Plano documentado em 07-tasks.md
 - **T-001 a T-004**: Estrutura base implementada
-  - `pyproject.toml` com dependências (mcp, httpx, tenacity)
+  - `pyproject.toml` com dependências (fastmcp, httpx, tenacity)
   - `src/searxng_mcp/` com `__init__.py`, `models.py`, `server.py`
   - README.md criado
   - Dependências instaladas via `uv sync`

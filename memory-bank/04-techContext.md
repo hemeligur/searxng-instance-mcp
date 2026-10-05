@@ -20,10 +20,12 @@
 searxng-instance-mcp/
 ├── src/
 │   └── searxng_mcp/
-│       ├── __init__.py
-│       ├── server.py          # Servidor MCP principal
-│       ├── manager.py         # SearXNGManager (pool + retry)
+│       ├── __init__.py        # Exports principais
+│       ├── __main__.py        # Entry point (uv run python -m searxng_mcp)
+│       ├── server.py          # Servidor FastMCP principal
+│       ├── manager.py          # SearXNGManager (pool + retry)
 │       ├── discovery.py       # InstanceDiscovery (searx.space)
+│       ├── constants.py       # Constantes e configurações
 │       └── models.py          # Modelos de dados
 ├── .pi/
 │   ├── mcp.json              # Configuração MCP do Pi

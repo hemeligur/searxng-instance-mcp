@@ -1,5 +1,17 @@
 # Active Context
 
+## Auditoria do Memory Bank
+
+- **Data**: 2025-10-06
+- **Harness**: Pi
+- **Ações realizadas**:
+  - Criado `08-completedTasks.md` com 13 tarefas concluídas
+  - `07-tasks.md` limpo (todas pendentes movidas)
+  - Versões de dependências corrigidas em `05-progress.md`
+  - Estrutura do projeto atualizada em `04-techContext.md`
+
+---
+
 ## Status Atual
 ✅ **PRODUTO PRONTO** - MCP funcionando globalmente no Pi
 
@@ -35,20 +47,12 @@ mcp__searxng_web_search__web_search({query: "python", results_limit: 3})
 
 ## Histórico da Correção
 
-### Bug Original
-Erro `Invalid request parameters` ao chamar via Pi.
+Correção importante documentada em `08-completedTasks.md`.
 
-### Causa
-API antiga do MCP SDK incompatível com protocolo moderno do Pi.
-
-### Solução
-- Migrou de `mcp[cli]>=1.0.0` para `fastmcp>=4.0.0`
-- Reescreveu `server.py` usando `@mcp.tool()` decorator
-
-### Commits
-- `0822031` - fix: migrate from mcp SDK to FastMCP 4
-- `14fb4dd` - docs: update memory bank with FastMCP fix
-- `5716722` - Merge PR #1 (fix/fastmcp-migration → main)
+### Resumo
+- **Bug**: `Invalid request parameters` ao chamar via Pi
+- **Solução**: Migrou de `mcp[cli]>=1.0.0` para `fastmcp>=4.0.0`
+- **Commits**: `0822031`, `5716722` (PR #1)
 
 ## Repositório
 
@@ -62,16 +66,15 @@ API antiga do MCP SDK incompatível com protocolo moderno do Pi.
 searxng-instance-mcp/
 ├── src/searxng_mcp/
 │   ├── __init__.py       # exports main
-│   ├── __main__.py       # Entry point
+│   ├── __main__.py       # Entry point (uv run python -m searxng_mcp)
 │   ├── constants.py      # FALLBACK_INSTANCES, configs
 │   ├── discovery.py      # InstanceDiscovery
 │   ├── manager.py        # SearXNGManager
 │   ├── models.py         # CircuitState, SearchResult
 │   └── server.py         # FastMCP server
-├── tests/                # 27 testes
-├── docs/                 # Debug report
-├── .pi/mcp.json         # REMOVIDO (usa global)
+├── tests/                # 27 testes (pytest)
+├── memory-bank/          # Documentação
 ├── pyproject.toml
 ├── README.md
-└── memory-bank/
+└── .pi/mcp.json         # REMOVIDO (usa registro global)
 ```
