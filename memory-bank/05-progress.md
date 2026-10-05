@@ -1,7 +1,7 @@
 # Progress
 
 ## Status Geral
-🟢 **PROJETO COMPLETO** - Servidor MCP funcionando globalmente no Pi
+🟢 **PRODUTO PRONTO** - Servidor MCP funcionando globalmente no Pi
 
 ## Marcos
 
