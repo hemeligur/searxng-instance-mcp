@@ -1,5 +1,8 @@
 # SearXNG Instance MCP
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
+
 MCP Server para busca web via SearXNG com fallback automático entre instâncias.
 
 ## O que é?
@@ -30,6 +33,8 @@ Este servidor MCP permite que agentes de IA façam buscas na web de forma privad
 
 ### Instalação
 
+#### Com uv (recomendado)
+
 ```bash
 # Clone o repositório
 git clone https://github.com/hemeligur/searxng-instance-mcp.git
@@ -37,6 +42,22 @@ cd searxng-instance-mcp
 
 # Instale dependências
 uv sync
+```
+
+#### Sem uv
+
+```bash
+# Clone o repositório
+git clone https://github.com/hemeligur/searxng-instance-mcp.git
+cd searxng-instance-mcp
+
+# Crie virtualenv
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# ou .venv\Scripts\activate  # Windows
+
+# Instale dependências
+pip install -e .
 ```
 
 ### Uso com Pi

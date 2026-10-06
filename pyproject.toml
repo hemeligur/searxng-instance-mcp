@@ -4,15 +4,15 @@ version = "0.1.0"
 description = "MCP server for web search via SearXNG with automatic instance fallback"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = { text = "GPL-3.0" }
 authors = [
-    { name = "Guilherme", email = "guilherme@example.com" }
+    { name = "Guilherme", email = "hemeligur@gmail.com" }
 ]
 keywords = ["mcp", "searxng", "web-search", "meta-search"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU General Public License v3.0",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
