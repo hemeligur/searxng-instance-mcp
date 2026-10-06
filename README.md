@@ -287,4 +287,4 @@ uv run python -c "from searxng_mcp.manager import SearXNGManager; import asyncio
 
 ## License
 
-MIT
+GPL-3.0
