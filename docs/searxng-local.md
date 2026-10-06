@@ -1,5 +1,7 @@
 # SearXNG Local (Docker)
 
+[![🇺🇸 English](./searxng-local-en.md)](./searxng-local-en.md)
+
 Este documento explica como rodar uma instância SearXNG localmente, caso você precise de **máxima privacidade** ou prefira não depender de instâncias públicas.
 
 > ⚠️ **Este MCP não gerencia instâncias locais.** Ele é um cliente que se conecta a instâncias públicas在线. Para rodar localmente, use as opções abaixo.

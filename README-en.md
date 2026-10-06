@@ -2,90 +2,90 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
-[![🇺🇸 English](./README-en.md)](./README-en.md)
+[![🇧🇷 Português](./README.md)](./README.md)
 
-**Cliente MCP para busca web via SearXNG** — usa instâncias públicas online com fallback automático.
+**MCP Client for Web Search via SearXNG** — connects to public online instances with automatic fallback.
 
-> ⚠️ **Nota**: Este projeto é um **cliente** que se conecta a instâncias SearXNG públicas/online (como `sx.xo.st`, `search.ctq.ro`). Se você quer rodar sua própria instância SearXNG localmente, consulte [docs/searxng-local.md](docs/searxng-local.md).
+> ⚠️ **Note**: This project is a **client** that connects to public/online SearXNG instances (like `sx.xo.st`, `search.ctq.ro`). If you want to run your own SearXNG instance locally, see [docs/searxng-local-en.md](docs/searxng-local-en.md).
 
 ---
 
-## Como Funciona
+## How It Works
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────────────────┐
-│   Cliente   │────▶│  SearXNG MCP     │────▶│  Instâncias Públicas Online │
-│   (Pi/AI)   │◀────│  (este projeto)  │◀────│                             │
+│   Client    │────▶│  SearXNG MCP     │────▶│  Public Online Instances   │
+│   (Pi/AI)   │◀────│  (this project)  │◀────│                             │
 └─────────────┘     └──────────────────┘     │  • sx.xo.st                │
                            │                 │  • search.ctq.ro           │
                            │                 │  • searx.space (discovery) │
                            ▼                 └─────────────────────────────┘
                     ┌──────────────────┐
-                    │  Cache Local     │
+                    │  Local Cache     │
                     │  (~/.cache/)     │
                     └──────────────────┘
 ```
 
-**Fluxo:**
-1. O cliente (Pi, Claude, etc.) chama `web_search(query)`
-2. O MCP tenta buscar na instância atual
-3. Se falhar (rate limit, timeout, etc.) → tenta próxima instância automaticamente
-4. Se todas falharem → retorna erro estruturado
+**Flow:**
+1. Client (Pi, Claude, etc.) calls `web_search(query)`
+2. MCP attempts to search on current instance
+3. If it fails (rate limit, timeout, etc.) → automatically tries next instance
+4. If all fail → returns structured error
 
 ---
 
-## O que é?
+## What Is This?
 
-Este servidor MCP permite que agentes de IA façam buscas na web de forma **privada**, usando o meta-buscador SearXNG como cliente.
+This MCP server enables AI agents to perform **private** web searches using the SearXNG meta-search engine.
 
-**Características:**
-- 🔍 **Busca Web Privada**: Agrega resultados de múltiplos buscadores sem rastrear
-- 🔄 **Fallback Automático**: Troca transparente entre instâncias quando uma falha
-- 🛡️ **Circuit Breaker**: Protege contra instâncias com problemas temporários
-- 🌐 **Discovery Dinâmico**: Descobre instâncias saudáveis automaticamente via searx.space
-- 💾 **Cache Local**: Inicialização rápida com cache de instâncias
+**Features:**
+- 🔍 **Private Web Search**: Aggregates results from multiple search engines without tracking
+- 🔄 **Automatic Fallback**: Seamlessly switches between instances when one fails
+- 🛡️ **Circuit Breaker**: Protects against instances with temporary issues
+- 🌐 **Dynamic Discovery**: Automatically discovers healthy instances via searx.space
+- 💾 **Local Cache**: Fast startup with cached instance list
 
 ---
 
 ## Quick Start
 
-### Instalação
+### Installation
 
 ```bash
-# Clone o repositório
+# Clone the repository
 git clone https://github.com/hemeligur/searxng-instance-mcp.git
 cd searxng-instance-mcp
 
-# Instale dependências (recomendado: use uv)
+# Install dependencies (recommended: use uv)
 uv sync
 ```
 
-### Uso com Pi
+### Usage with Pi
 
 ```bash
-# Adicione ao Pi
+# Add to Pi
 pi mcp add -l searxng-web-search -- uv run python -m searxng_mcp
 ```
 
-### Uso como Tool
+### Usage as Tool
 
 ```javascript
-// No Pi ou outro cliente MCP
+// In Pi or other MCP client
 mcp__searxng_web_search__web_search({query: "python programming", results_limit: 5})
 ```
 
 ---
 
-## API da Tool
+## Tool API
 
 ### web_search
 
-| Parâmetro | Tipo | Padrão | Descrição |
-|-----------|------|--------|-----------|
-| `query` | string | obrigatório | Termo de busca |
-| `results_limit` | number | 10 | Número máximo de resultados (1-50) |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `query` | string | required | Search term |
+| `results_limit` | number | 10 | Maximum number of results (1-50) |
 
-### Exemplo de Resposta
+### Response Example
 
 ```json
 {
@@ -104,7 +104,7 @@ mcp__searxng_web_search__web_search({query: "python programming", results_limit:
 }
 ```
 
-### Resposta de Erro
+### Error Response
 
 ```json
 {
@@ -120,36 +120,36 @@ mcp__searxng_web_search__web_search({query: "python programming", results_limit:
 
 ---
 
-## Configuração
+## Configuration
 
-### Variáveis de Ambiente
+### Environment Variables
 
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
-| `SEARXNG_CACHE_TTL` | `3600` | TTL do cache em segundos (1 hora) |
-| `SEARXNG_TIMEOUT` | `10` | Timeout da requisição em segundos |
-| `SEARXNG_INSTANCES` | (auto-discovered) | Lista de instâncias separada por vírgulas |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SEARXNG_CACHE_TTL` | `3600` | Cache TTL in seconds (1 hour) |
+| `SEARXNG_TIMEOUT` | `10` | Request timeout in seconds |
+| `SEARXNG_INSTANCES` | (auto-discovered) | Comma-separated list of instances |
 
-### Exemplos
+### Examples
 
 ```bash
-# Cache curto para desenvolvimento
+# Short cache for development
 SEARXNG_CACHE_TTL=60 uv run python -m searxng_mcp
 
-# Timeout maior para conexões lentas
+# Longer timeout for slow connections
 SEARXNG_TIMEOUT=30 uv run python -m searxng_mcp
 
-# Instâncias específicas (opcional)
+# Specific instances (optional)
 SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m searxng_mcp
 ```
 
 ---
 
-## Arquitetura
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                              CLIENTE (Pi/AI)                            │
+│                              CLIENT (Pi/AI)                             │
 └─────────────────────────────────────────────────────────────────────────┘
                                       │ MCP Protocol
                                       ▼
@@ -158,9 +158,9 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m sear
 │  ┌───────────────────────────────────────────────────────────────────┐  │
 │  │  server.py → manager.py → discovery.py                          │  │
 │  │                                                               │  │
-│  │  • Circuit Breaker (3 falhas → 5min cooldown)                 │  │
-│  │  • Instance Pool (rotação automática)                          │  │
-│  │  • Cache Local (~/.cache/searxng-mcp/)                         │  │
+│  │  • Circuit Breaker (3 failures → 5min cooldown)               │  │
+│  │  • Instance Pool (automatic rotation)                          │  │
+│  │  • Local Cache (~/.cache/searxng-mcp/)                         │  │
 │  └───────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
                                       │
@@ -168,8 +168,8 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m sear
         │                             │                             │
         ▼                             ▼                             ▼
 ┌───────────────┐          ┌───────────────────┐         ┌─────────────────┐
-│  searx.space  │          │  ~/.cache/        │         │  Instâncias     │
-│  (Discovery)  │          │  searxng-mcp/     │         │  Públicas       │
+│  searx.space  │          │  ~/.cache/        │         │  Public         │
+│  (Discovery)  │          │  searxng-mcp/     │         │  Instances       │
 │               │          │  instances.json   │         │                 │
 └───────────────┘          └───────────────────┘         │  • sx.xo.st     │
                                                           │  • search.ctq.ro│
@@ -177,82 +177,82 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m sear
                                                           └─────────────────┘
 ```
 
-### Componentes
+### Components
 
-| Componente | Arquivo | Responsabilidade |
-|------------|---------|-----------------|
-| Server | `server.py` | Interface MCP (FastMCP) |
-| Manager | `manager.py` | Pool de instâncias + Circuit Breaker |
-| Discovery | `discovery.py` | Busca e filtra instâncias do searx.space |
-| Models | `models.py` | Tipos de dados |
-| Constants | `constants.py` | Configurações |
+| Component | File | Responsibility |
+|-----------|------|----------------|
+| Server | `server.py` | MCP Interface (FastMCP) |
+| Manager | `manager.py` | Instance Pool + Circuit Breaker |
+| Discovery | `discovery.py` | Fetch and filter instances from searx.space |
+| Models | `models.py` | Data types |
+| Constants | `constants.py` | Configuration |
 
 ---
 
-## Documentação
+## Documentation
 
-### Para Usuários
-- [Guia SearXNG](docs/usuario/searxng-guide.md) - Como usar SearXNG para busca web
-- [Troubleshooting](docs/usuario/troubleshooting.md) - Solução de problemas comuns
+### For Users
+- [SearXNG Guide](docs/usuario/searxng-guide-en.md) - How to use SearXNG for web search
+- [Troubleshooting](docs/usuario/troubleshooting-en.md) - Common problems and solutions
 
-### Para Desenvolvedores
-- [Arquitetura](docs/developer/arquitetura.md) - Visão técnica da arquitetura
-- [Debug Report](docs/developer/mcp-debug-report.md) - Histórico de debugging do MCP
+### For Developers
+- [Architecture](docs/developer/architecture.md) - Technical architecture overview
+- [Debug Report](docs/developer/mcp-debug-report.md) - MCP debugging history
 
 ### Skills
-- [SearXNG Skill](docs/skill/searxng-skill.md) - Skill para usar no Pi
+- [SearXNG Skill](docs/skill/searxng-skill.md) - Skill to use with Pi
 
 ---
 
 ## Troubleshooting
 
-### Problemas Comuns
+### Common Problems
 
 1. **"All instances unavailable"**
-   - Sem internet ou todas as instâncias com rate limit
-   - Solução: `rm -rf ~/.cache/searxng-mcp/`
+   - No internet or all instances rate limited
+   - Solution: `rm -rf ~/.cache/searxng-mcp/`
 
 2. **Rate Limiting (429)**
-   - Aguarde alguns minutos
-   - Sistema faz fallback automaticamente
+   - Wait a few minutes
+   - System automatically falls back
 
 3. **Timeout**
-   - Aumente `SEARXNG_TIMEOUT` se necessário
+   - Increase `SEARXNG_TIMEOUT` if needed
 
-Consulte [docs/usuario/troubleshooting.md](docs/usuario/troubleshooting.md) para problemas detalhados.
+See [docs/usuario/troubleshooting-en.md](docs/usuario/troubleshooting-en.md) for detailed troubleshooting.
 
 ### Debugging
 
 ```bash
-# Ver cache
+# View cache
 cat ~/.cache/searxng-mcp/instances.json | jq .
 
-# Limpar cache
+# Clear cache
 rm -rf ~/.cache/searxng-mcp/
 
-# Testar diretamente
+# Test directly
 uv run python -c "from searxng_mcp.manager import SearXNGManager; import asyncio; print(asyncio.run(SearXNGManager().search('test', 3)))"
 ```
 
 ---
 
-## Desenvolvimento
+## Development
 
-### Pré-requisitos
+### Prerequisites
 - Python 3.10+
 - [uv](https://github.com/astral-sh/uv)
 
 ### Setup
 
 ```bash
-# Instalar dependências
+# Install dependencies
 uv sync
 
-# Instalar dev dependencies
+# Install dev dependencies
 uv sync --extra dev
 ```
 
-### Comandos Úteis
+### Useful Commands
 
 ```bash
 # Type checking
@@ -261,16 +261,16 @@ uv run pyright src/
 # Linting
 uv run ruff check src/
 
-# Testes
+# Tests
 uv run pytest
 
-# Com coverage
+# With coverage
 uv run pytest --cov=src/searxng_mcp --cov-report=term-missing
 ```
 
 ---
 
-## Estrutura do Projeto
+## Project Structure
 
 ```
 searxng-instance-mcp/
@@ -282,12 +282,12 @@ searxng-instance-mcp/
 │   ├── discovery.py         # Instance discovery (searx.space)
 │   ├── models.py            # Data models
 │   └── constants.py         # Configuration
-├── tests/                   # 27 testes pytest
+├── tests/                   # 27 pytest tests
 ├── docs/
-│   ├── usuario/             # Documentação para usuários
-│   ├── developer/           # Documentação para desenvolvedores
-│   └── skill/               # Skills do Pi
-├── memory-bank/             # Contexto do projeto
+│   ├── usuario/             # User documentation
+│   ├── developer/           # Developer documentation
+│   └── skill/               # Pi skills
+├── memory-bank/             # Project context
 ├── pyproject.toml
 └── README.md
 ```

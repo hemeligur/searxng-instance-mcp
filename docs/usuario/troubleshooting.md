@@ -1,5 +1,7 @@
 # Troubleshooting - SearXNG Instance MCP
 
+[![🇺🇸 English](./troubleshooting-en.md)](./troubleshooting-en.md)
+
 ## Problemas Comuns e Soluções
 
 ### 1. "All instances unavailable"

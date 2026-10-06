@@ -1,16 +1,14 @@
-# Arquitetura do SearXNG Instance MCP
+# Architecture - SearXNG Instance MCP
 
-[![🇺🇸 English](./architecture.md)](./architecture.md)
+[![🇧🇷 Português](./arquitetura.md)](./arquitetura.md)
 
-## Visão Geral
+This document describes the technical architecture of the MCP server for web search via SearXNG.
 
-Este documento descreve a arquitetura técnica do servidor MCP para busca web via SearXNG.
-
-## Diagrama de Arquitetura
+## Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           CLIENTE (Pi Agent)                            │
+│                           CLIENT (Pi Agent)                             │
 │                         mcp__searxng_web_search__web_search()          │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
@@ -46,78 +44,78 @@ Este documento descreve a arquitetura técnica do servidor MCP para busca web vi
            └─────────────┘  └─────────────┘  └─────────────┘
 ```
 
-## Componentes
+## Components
 
 ### 1. Server (`server.py`)
 
-Ponto de entrada do servidor MCP usando FastMCP.
+MCP server entry point using FastMCP.
 
-**Responsabilidades:**
-- Registrar a ferramenta `web_search`
-- Validar e processar requisições
-- Serializar respostas para JSON
+**Responsibilities:**
+- Register the `web_search` tool
+- Validate and process requests
+- Serialize responses to JSON
 
-**Interface exposta:**
+**Exposed Interface:**
 ```python
 @mcp.tool()
 async def web_search(query: str, results_limit: int = 10) -> str:
-    """Busca na web usando meta-buscador SearXNG com fallback automático."""
+    """Search the web using SearXNG meta-search engine with automatic fallback."""
 ```
 
 ### 2. Manager (`manager.py`)
 
-Orquestra o pool de instâncias e execução de buscas.
+Orchestrates the instance pool and search execution.
 
-**Responsabilidades:**
-- Gerenciar ciclo de vida das instâncias
-- Implementar circuit breaker pattern
-- Executar busca com fallback
-- Rastrear estatísticas de sucesso/falha
+**Responsibilities:**
+- Manage instance lifecycle
+- Implement circuit breaker pattern
+- Execute search with fallback
+- Track success/failure statistics
 
-**Padrão Circuit Breaker:**
+**Circuit Breaker Pattern:**
 ```
-CLOSED ──(3 falhas)──▶ OPEN ──(5 min)──▶ HALF_OPEN ──(sucesso)──▶ CLOSED
+CLOSED ──(3 failures)──▶ OPEN ──(5 min)──▶ HALF_OPEN ──(success)──▶ CLOSED
                                                       │
-                                                      └──(falha)──▶ OPEN
+                                                      └──(failure)──▶ OPEN
 ```
 
 ### 3. Discovery (`discovery.py`)
 
-Descoberta e filtragem de instâncias disponíveis.
+Discovers and filters available instances.
 
-**Responsabilidades:**
-- Buscar instâncias da API searx.space
-- Filtrar por uptime, TLS rank, engines disponíveis
-- Cachear resultados localmente
-- Fornecer fallback quando API indisponível
+**Responsibilities:**
+- Fetch instances from searx.space API
+- Filter by uptime, TLS rank, available engines
+- Cache results locally
+- Provide fallback when API is unavailable
 
-**Critérios de filtragem:**
-| Critério | Valor Mínimo |
-|----------|--------------|
+**Filtering Criteria:**
+| Criterion | Minimum Value |
+|-----------|---------------|
 | Uptime | 95% |
-| TLS Rank | A+ ou A |
+| TLS Rank | A+ or A |
 | Engines | google, bing, duckduckgo |
 
 ### 4. Models (`models.py`)
 
-Modelos de dados do domínio.
+Domain data models.
 
-**Classes principais:**
-| Classe | Propósito |
-|--------|-----------|
-| `CircuitState` | Enum para estados do circuit breaker |
-| `InstanceStatus` | Status de uma instância individual |
-| `SearchResult` | Resultado individual de busca |
-| `SearchResponse` | Resposta completa da busca |
-| `DiscoveredInstance` | Instância do searx.space |
+**Main Classes:**
+| Class | Purpose |
+|-------|---------|
+| `CircuitState` | Enum for circuit breaker states |
+| `InstanceStatus` | Status of an individual instance |
+| `SearchResult` | Individual search result |
+| `SearchResponse` | Complete search response |
+| `DiscoveredInstance` | Instance from searx.space |
 
 ### 5. Constants (`constants.py`)
 
-Configurações centralizadas do projeto.
+Centralized project configuration.
 
-## Fluxo de Execução
+## Execution Flow
 
-### 1. Inicialização
+### 1. Initialization
 
 ```
 1. SearXNGManager.__init__()
@@ -125,18 +123,18 @@ Configurações centralizadas do projeto.
        ▼
 2. _initialize_instances()
        │
-       ├──▶ Tentativa 1: discover_instances(use_cache=True)
+       ├──▶ Attempt 1: discover_instances(use_cache=True)
        │         │
-       │         ├── Cache válido ──▶ Retorna instâncias do cache
+       │         ├── Valid cache ──▶ Return cached instances
        │         │
-       │         └── Cache inválido ──▶ _fetch_instances_from_api()
+       │         └── Invalid cache ──▶ _fetch_instances_from_api()
        │                                    │
-       │                                    └──▶ Se falhar ──▶ FALLBACK_INSTANCES
+       │                                    └──▶ If fails ──▶ FALLBACK_INSTANCES
        │
-       └──▶ asyncio.run() falhar ──▶ _load_fallback_instances()
+       └──▶ If asyncio.run() fails ──▶ _load_fallback_instances()
 ```
 
-### 2. Busca (web_search)
+### 2. Search (web_search)
 
 ```
 1. web_search(query, limit)
@@ -144,28 +142,28 @@ Configurações centralizadas do projeto.
        ▼
 2. manager.search(query, limit)
        │
-       ├──▶ Validar query (não vazia)
+       ├──▶ Validate query (not empty)
        │
        ▼
-3. Para cada instância no pool:
+3. For each instance in pool:
        │
-       ├──▶ is_available() → Verificar circuit breaker
+       ├──▶ is_available() → Check circuit breaker
        │
-       ├──▶ Se OPEN com TTL expirado → HALF_OPEN
+       ├──▶ If OPEN with expired TTL → HALF_OPEN
        │
        ├──▶ _try_instance(url, query, limit)
        │         │
        │         ├── GET /search?q=...&format=json&limit=...
        │         │
-       │         └── Parsear resposta JSON
+       │         └── Parse JSON response
        │
-       ├──▶ Se sucesso → Retornar SearchResponse
+       ├──▶ If success → Return SearchResponse
        │
-       └──▶ Se falha → Próxima instância
+       └──▶ If failure → Next instance
               │
               └──▶ _update_instance_status(success=False)
                         │
-                        └──▶ Se 3 falhas → OPEN
+                        └──▶ If 3 failures → OPEN
 ```
 
 ### 3. Cache
@@ -176,7 +174,7 @@ Configurações centralizadas do projeto.
 │                      instances.json                          │
 ├─────────────────────────────────────────────────────────────┤
 │  {                                                          │
-│    "timestamp": 1696540800,  // Unix time do cache         │
+│    "timestamp": 1696540800,  // Unix time of cache         │
 │    "instances": [                                        │
 │      "https://sx.xo.st",                                   │
 │      "https://search.ctq.ro",                              │
@@ -185,20 +183,20 @@ Configurações centralizadas do projeto.
 │  }                                                         │
 └─────────────────────────────────────────────────────────────┘
 
-TTL padrão: 3600 segundos (1 hora)
+Default TTL: 3600 seconds (1 hour)
 ```
 
-## Estados do Circuit Breaker
+## Circuit Breaker States
 
-| Estado | Comportamento | Transição |
-|--------|--------------|-----------|
-| **CLOSED** | Requisições normais | → OPEN após 3 falhas |
-| **OPEN** | Requisições bloqueadas | → HALF_OPEN após 5 min |
-| **HALF_OPEN** | Uma requisição de teste | → CLOSED (sucesso) ou OPEN (falha) |
+| State | Behavior | Transition |
+|-------|----------|------------|
+| **CLOSED** | Normal requests | → OPEN after 3 failures |
+| **OPEN** | Requests blocked | → HALF_OPEN after 5 min |
+| **HALF_OPEN** | One test request | → CLOSED (success) or OPEN (failure) |
 
-## Formato de Resposta
+## Response Format
 
-### Sucesso
+### Success
 ```json
 {
   "success": true,
@@ -216,7 +214,7 @@ TTL padrão: 3600 segundos (1 hora)
 }
 ```
 
-### Erro
+### Error
 ```json
 {
   "success": false,
@@ -230,29 +228,29 @@ TTL padrão: 3600 segundos (1 hora)
 }
 ```
 
-## Dependências Externas
+## External Dependencies
 
-| Dependência | Versão | Propósito |
-|-------------|--------|-----------|
-| `fastmcp` | >=4.0.0 | Framework MCP Server |
-| `httpx` | >=0.25.0 | Cliente HTTP assíncrono |
-| `tenacity` | >=8.0.0 | Retry logic (configurado) |
+| Dependency | Version | Purpose |
+|------------|---------|---------|
+| `fastmcp` | >=4.0.0 | MCP Server Framework |
+| `httpx` | >=0.25.0 | Async HTTP Client |
+| `tenacity` | >=8.0.0 | Retry logic (configured) |
 
-## API SearXNG
+## SearXNG API
 
 ### Endpoint
 ```
 GET https://<instance>/search
 ```
 
-### Parâmetros
-| Parâmetro | Tipo | Padrão | Descrição |
-|-----------|------|--------|-----------|
-| `q` | string | obrigatório | Query de busca |
-| `format` | string | json | Formato da resposta |
-| `limit` | int | 10 | Número de resultados (1-50) |
+### Parameters
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `q` | string | required | Search query |
+| `format` | string | json | Response format |
+| `limit` | int | 10 | Number of results (1-50) |
 
-### Resposta SearXNG
+### SearXNG Response
 ```json
 {
   "results": [...],
@@ -263,18 +261,18 @@ GET https://<instance>/search
 }
 ```
 
-## Localização de Arquivos
+## File Locations
 
-| Item | Caminho |
-|------|---------|
+| Item | Path |
+|------|------|
 | Cache | `~/.cache/searxng-mcp/instances.json` |
-| Logs | stderr (via logging Python) |
-| Config | Variáveis de ambiente |
+| Logs | stderr (via Python logging) |
+| Config | Environment variables |
 
-## Variáveis de Ambiente
+## Environment Variables
 
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
-| `SEARXNG_CACHE_TTL` | 3600 | TTL do cache em segundos |
-| `SEARXNG_TIMEOUT` | 10 | Timeout por requisição (s) |
-| `SEARXNG_INSTANCES` | (API) | Lista de instâncias (não usado atualmente) |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SEARXNG_CACHE_TTL` | 3600 | Cache TTL in seconds |
+| `SEARXNG_TIMEOUT` | 10 | Request timeout (s) |
+| `SEARXNG_INSTANCES` | (API) | Instance list (not currently used) |

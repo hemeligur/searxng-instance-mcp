@@ -1,5 +1,7 @@
 # Manual: Busca na Web com SearXNG
 
+[![🇺🇸 English](./searxng-guide-en.md)](./searxng-guide-en.md)
+
 ## O que é SearXNG?
 
 SearXNG é um motor de meta-busca **privado e gratuito** que agrega resultados de diversos buscadores (Google, Bing, DuckDuckGo, etc.) sem rastrear ou perfilar usuários.
