@@ -110,3 +110,10 @@
 - **Memory Bank atualizado:**
   - 06-activeContext.md atualizado com nova estrutura
   - 05-progress.md atualizado com reorganização
+
+### 2025-10-06 (Build Fix)
+- **Problema**: `ValueError: Unknown classifier in field 'project.classifiers'`
+- **Causa**: Classifier de licença inválido: `GNU General Public License v3.0`
+- **Solução**: Corrigido para `GNU General Public License v3 (GPLv3)` (formato oficial Trove)
+- **Arquivo**: `pyproject.toml`
+- **Build**: Verificada com sucesso (`uv build`)

@@ -119,6 +119,14 @@ Tarefas concluídas do projeto, ordenadas por código.
 
 ## Correções Importantes
 
+### FIX-001: Classifier de Licença Inválido (2025-10-06)
+- **Problema**: `ValueError: Unknown classifier` ao fazer `uv pip install` ou `uv build`
+- **Causa Raiz**: Classifier `"License :: OSI Approved :: GNU General Public License v3.0"` não existe na lista oficial de Trove Classifiers
+- **Solução**: Corrigido para `"License :: OSI Approved :: GNU General Public License v3 (GPLv3)"`
+- **Arquivo**: `pyproject.toml` linha 10
+- **Verificação**: Build passou com sucesso (`uv build`)
+- **Nota**: Conforme PEP 639, classifiers de licença estão deprecated. Preferir `license` em `project`.
+
 ### Fix FastMCP (2025-10-06)
 - **Problema**: API antiga do MCP SDK incompatível com protocolo moderno do Pi
 - **Solução**: Migrou de `mcp[cli]>=1.0.0` para `fastmcp>=4.0.0`
