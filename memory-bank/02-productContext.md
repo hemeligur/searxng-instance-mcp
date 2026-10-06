@@ -9,15 +9,34 @@ Referências:
 - https://searx.space (indexador de instâncias)
 - https://docs.searxng.org
 
+## O que é Este MCP?
+
+Este projeto é um **CLIENTE MCP** que se conecta a instâncias SearXNG **PÚBLICAS/ONLINE**. Não é um servidor de instâncias.
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────────────────┐
+│   Cliente   │────▶│  SearXNG MCP     │────▶│  Instâncias Públicas Online │
+│   (Pi/AI)   │◀────│  (este projeto)  │◀────│  • sx.xo.st                 │
+└─────────────┘     └──────────────────┘     │  • searxng.org             │
+                              │                │  • (descobertas via        │
+                              ▼                │   searx.space)             │
+                       ┌──────────────────┐    └─────────────────────────────┘
+                       │  Cache Local     │
+                       │  (~/.cache/)     │
+                       └──────────────────┘
+```
+
+**Nota importante**: Se você precisa de máxima privacidade ou quer rodar sua própria instância, consulte [docs/searxng-local.md](docs/searxng-local.md).
+
 ## Por que um MCP para SearXNG?
 
 ### Problema
 - Instâncias públicas do SearXNG podem ficar indisponíveis
 - Rate limiting pode bloquear requisições
-- Cliente não deveria gerenciar essas complexities
+- Cliente não deveria gerenciar essas complexidades
 
 ### Solução
-- Pool de instâncias verificadas
+- Pool de instâncias verificadas (públicas online)
 - Fallback automático em caso de falha
 - Abstração completa da infraestrutura
 

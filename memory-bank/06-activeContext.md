@@ -1,5 +1,30 @@
 # Active Context
 
+## Melhoria da Documentação (2025-10-06)
+
+### Problema Identificado
+README.md não deixava claro que o MCP é um **cliente** que usa instâncias públicas online, não um servidor de instâncias locais.
+
+### Ações Realizadas
+1. **Rewrote completo do README.md**
+   - Nova seção "Como Funciona" com diagrama claro no topo
+   - Nota de destaque sobre instâncias públicas vs locais
+   - Seção "O que é?" reformulada
+   - Diagrama de arquitetura melhorado
+
+2. **Criado `docs/searxng-local.md`**
+   - Documentação sobre como rodar instância local (Docker)
+   - Comparação cliente MCP vs instância local
+   - Referência cruzada no README
+
+### Resultado
+✅ Usuários agora entendem claramente:
+- Este é um cliente que conecta a instâncias públicas
+- Não é um servidor de instâncias
+- Para local, há documentação específica
+
+---
+
 ## Auditoria do Memory Bank
 
 - **Data**: 2025-10-06

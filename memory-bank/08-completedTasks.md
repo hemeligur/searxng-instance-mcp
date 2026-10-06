@@ -105,6 +105,18 @@ Tarefas concluídas do projeto, ordenadas por código.
 
 ---
 
+## Melhorias de Documentação
+
+### DOC-001: Clarificar propósito do MCP (2025-10-06)
+- **Data de Conclusão**: 2025-10-06
+- **Problema**: README não deixava claro que o MCP é um cliente que usa instâncias públicas online, não um servidor de instâncias locais
+- **Entregáveis**:
+  - **README.md reescrito**: Nova seção "Como Funciona" com diagrama no topo, nota de destaque sobre instâncias públicas
+  - **`docs/searxng-local.md` criado**: Documentação para quem quer rodar instância local com Docker
+- **Resultado**: Usuários entendem claramente o propósito e diferenças
+
+---
+
 ## Correções Importantes
 
 ### Fix FastMCP (2025-10-06)
@@ -126,4 +138,5 @@ Tarefas concluídas do projeto, ordenadas por código.
 | Fase 5: Config Pi | T-040, T-041 | ✅ 2/2 |
 | Fase 6: Documentação | T-050 | ✅ 1/1 |
 | Fase 7: Testes | T-060 a T-062 | ✅ 3/3 |
-| **Total** | **13 tarefas** | **✅ 13/13** |
+| Melhorias Documentação | DOC-001 | ✅ 1/1 |
+| **Total** | **14 tarefas** | **✅ 14/14** |
