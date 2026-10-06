@@ -5,7 +5,7 @@
 
 **Cliente MCP para busca web via SearXNG** — usa instâncias públicas online com fallback automático.
 
-> ⚠️ **Nota**: Este projeto é um **cliente** que se conecta a instâncias SearXNG públicas/online (como `sx.xo.st`, `searxng.org`). Se você quer rodar sua própria instância SearXNG localmente, consulte [docs/searxng-local.md](docs/searxng-local.md).
+> ⚠️ **Nota**: Este projeto é um **cliente** que se conecta a instâncias SearXNG públicas/online (como `sx.xo.st`, `search.ctq.ro`). Se você quer rodar sua própria instância SearXNG localmente, consulte [docs/searxng-local.md](docs/searxng-local.md).
 
 ---
 
@@ -16,7 +16,7 @@
 │   Cliente   │────▶│  SearXNG MCP     │────▶│  Instâncias Públicas Online │
 │   (Pi/AI)   │◀────│  (este projeto)  │◀────│                             │
 └─────────────┘     └──────────────────┘     │  • sx.xo.st                │
-                           │                 │  • searxng.org             │
+                           │                 │  • search.ctq.ro           │
                            │                 │  • searx.space (discovery) │
                            ▼                 └─────────────────────────────┘
                     ┌──────────────────┐
@@ -139,7 +139,7 @@ SEARXNG_CACHE_TTL=60 uv run python -m searxng_mcp
 SEARXNG_TIMEOUT=30 uv run python -m searxng_mcp
 
 # Instâncias específicas (opcional)
-SEARXNG_INSTANCES="https://sx.xo.st,https://searxng.org" uv run python -m searxng_mcp
+SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m searxng_mcp
 ```
 
 ---
@@ -171,7 +171,7 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://searxng.org" uv run python -m searxn
 │  (Discovery)  │          │  searxng-mcp/     │         │  Públicas       │
 │               │          │  instances.json   │         │                 │
 └───────────────┘          └───────────────────┘         │  • sx.xo.st     │
-                                                          │  • searxng.org  │
+                                                          │  • search.ctq.ro│
                                                           │  • xka.cz       │
                                                           └─────────────────┘
 ```

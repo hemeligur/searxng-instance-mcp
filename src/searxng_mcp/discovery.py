@@ -38,7 +38,7 @@ DEFAULT_CACHE_TTL = int(os.environ.get("SEARXNG_CACHE_TTL", "3600"))  # 1 hour d
 # Fallback instances (hardcoded reliable instances)
 FALLBACK_INSTANCES = [
     "https://sx.xo.st",
-    "https://searxng.org",
+    "https://search.ctq.ro",
     "https://xka.cz",
 ]
 

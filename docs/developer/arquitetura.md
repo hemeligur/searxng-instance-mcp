@@ -177,7 +177,7 @@ Configurações centralizadas do projeto.
 │    "timestamp": 1696540800,  // Unix time do cache         │
 │    "instances": [                                        │
 │      "https://sx.xo.st",                                   │
-│      "https://searxng.org",                                │
+│      "https://search.ctq.ro",                              │
 │      ...                                                   │
 │    ]                                                       │
 │  }                                                         │

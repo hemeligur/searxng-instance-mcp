@@ -86,12 +86,12 @@ def sample_instances_api_response() -> dict:
                 },
                 "engines": ["google", "bing", "duckduckgo"],
             },
-            "searxng.org": {
-                "name": "searxng.org",
-                "url": "https://searxng.org",
+            "search.ctq.ro": {
+                "name": "search.ctq.ro",
+                "url": "https://search.ctq.ro",
                 "network": {
-                    "uptime": 98,
-                    "tls_rank": "A",
+                    "uptime": 100,
+                    "tls_rank": "A+",
                 },
                 "engines": ["google", "bing", "duckduckgo"],
             },

@@ -29,7 +29,7 @@ from pathlib import Path
 
 FALLBACK_INSTANCES: list[str] = [
     "https://sx.xo.st",
-    "https://searxng.org",
+    "https://search.ctq.ro",
     "https://xka.cz",
     "https://www.isci.si",
 ]

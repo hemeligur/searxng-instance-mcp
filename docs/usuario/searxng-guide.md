@@ -35,7 +35,7 @@ No searx.space, procure por instâncias com:
 |-----|--------|-------------|
 | `https://sx.xo.st` | ✅ Boa | Uptime 100%, rápida |
 | `https://xka.cz` | ⚠️ Rate limit | Funciona, mas com limites |
-| `https://searxng.org` | ✅ Oficial | Instância pública oficial |
+| `https://search.ctq.ro` | ✅ Boa | Uptime 100%, TLS A+ |
 
 ---
 
@@ -145,7 +145,7 @@ Não abuse de uma única instância. Se receber rate limit:
 
 ```bash
 # Tente estas em ordem
-INSTANCES=("sx.xo.st" "xka.cz" "searxng.org")
+INSTANCES=("sx.xo.st" "xka.cz" "search.ctq.ro")
 
 for inst in "${INSTANCES[@]}"; do
   result=$(curl -s "https://$inst/search?q=test&format=json")
@@ -184,10 +184,13 @@ https://www.gruble.de   # Boa para DE
 https://www.isci.si     # Backup
 ```
 
-### Instância Oficial
+### Instâncias Confiáveis
 ```
-https://searxng.org     # Pública, pode ter rate limit
+https://sx.xo.st        # Rápida, bom uptime
+https://search.ctq.ro   # Uptime 100%, TLS A+
 ```
+
+> ⚠️ **Nota**: `https://searxng.org` é o **site oficial/documentação** do projeto, não uma instância pública de busca.
 
 ---
 

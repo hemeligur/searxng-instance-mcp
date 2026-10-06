@@ -4,10 +4,15 @@
 
 SearXNG é um motor de meta-busca **privado e gratuito** que agrega resultados de diversos buscadores (Google, Bing, DuckDuckGo, etc.) sem rastrear ou perfilar usuários.
 
-Referências:
-- https://searxng.org
-- https://searx.space (indexador de instâncias)
-- https://docs.searxng.org
+### URLs Importantes
+
+| URL | Tipo | Descrição |
+|-----|------|-----------|
+| `https://searxng.org` | **Site/Docs** | Landing page e documentação do projeto. **NÃO** é uma instância pública |
+| `https://searx.space` | Indexador | Lista todas as instâncias públicas disponíveis |
+| `https://docs.searxng.org` | Documentação | Guias de instalação e configuração |
+
+> ⚠️ **Cuidado**: `searxng.org` **não** é uma instância pública de busca. É apenas o site oficial do projeto. Buscas funcionam apenas em instâncias listadas no searx.space.
 
 ## O que é Este MCP?
 
@@ -17,7 +22,7 @@ Este projeto é um **CLIENTE MCP** que se conecta a instâncias SearXNG **PÚBLI
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────────────────┐
 │   Cliente   │────▶│  SearXNG MCP     │────▶│  Instâncias Públicas Online │
 │   (Pi/AI)   │◀────│  (este projeto)  │◀────│  • sx.xo.st                 │
-└─────────────┘     └──────────────────┘     │  • searxng.org             │
+└─────────────┘     └──────────────────┘     │  • search.ctq.ro           │
                               │                │  • (descobertas via        │
                               ▼                │   searx.space)             │
                        ┌──────────────────┐    └─────────────────────────────┘
@@ -60,9 +65,11 @@ Este projeto é um **CLIENTE MCP** que se conecta a instâncias SearXNG **PÚBLI
 | URL | Status | Observações |
 |-----|--------|-------------|
 | `https://sx.xo.st` | ✅ Boa | Uptime 100%, rápida |
+| `https://search.ctq.ro` | ✅ Boa | Uptime 100%, TLS A+ |
 | `https://xka.cz` | ⚠️ Rate limit | Funciona, mas com limites |
-| `https://searxng.org` | ✅ Oficial | Instância pública oficial |
 | `https://www.isci.si` | ✅ Backup | Alternativa confiável |
+
+> ⚠️ **Não use `searxng.org`** como instância - é apenas o site oficial, não uma instância de busca.
 
 ## Decisões de Design
 
