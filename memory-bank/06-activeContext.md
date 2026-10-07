@@ -100,6 +100,52 @@ docs/
 
 ---
 
+## Configuração via Environment Variables (2025-10-07)
+
+### CFG-001 Implementado
+Implementação de configuração via environment variables para controle de instâncias e tools de debug.
+
+#### Novas Variáveis de Ambiente
+| Variável | Padrão | Descrição |
+|----------|--------|-----------|
+| `SEARXNG_DISABLED_INSTANCES` | (vazio) | URLs de instâncias a desabilitar permanentemente |
+| `SEARXNG_DEBUG_TOOLS` | `false` | Habilita tools de debug (opt-in) |
+| `SEARXNG_BACKOFF_BASE` | `60` | Backoff base em segundos |
+| `SEARXNG_BACKOFF_MAX` | `900` | Backoff máximo em segundos |
+
+#### Arquitetura de Implementação
+1. **`constants.py`**: Helpers para ler env vars com valores padrão
+2. **`models.py`**: Campo `disabled` no `InstanceStatus`
+3. **`server.py`**: Registro condicional de debug tools (só se `SEARXNG_DEBUG_TOOLS=true`)
+4. **`manager.py`**: Aplica lista de desabilitados na inicialização
+5. **`persistence.py`**: Filtra instâncias desabilitadas ao salvar/carregar
+
+#### Casos de Uso
+```bash
+# Desabilitar instâncias com problemas (anti-bot)
+SEARXNG_DISABLED_INSTANCES="https://search.ctq.ro" uv run python -m searxng_mcp
+
+# Habilitar debug tools
+SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
+
+# Via mcp.json
+{
+  "env": {
+    "SEARXNG_DISABLED_INSTANCES": "https://search.ctq.ro,https://bad.com",
+    "SEARXNG_DEBUG_TOOLS": "false"
+  }
+}
+```
+
+#### Testes
+19 novos testes em `tests/test_config.py` cobrindo:
+- Parsing de `SEARXNG_DISABLED_INSTANCES`
+- Valores truthy para `SEARXNG_DEBUG_TOOLS`
+- Configuração de backoff via env vars
+- Comportamento do campo `disabled`
+
+---
+
 ## Melhorias de Resiliência (2025-10-07)
 
 ### Problema Identificado
@@ -158,7 +204,7 @@ docs/
 
 ### Testes
 ```
-38 testes passando
+57 testes passando
 ```
 
 ---
@@ -166,6 +212,7 @@ docs/
 ## Status Atual
 ✅ **PRODUTO PRONTO** - MCP funcionando globalmente no Pi
 ✅ **Issue #4 CORRIGIDO** - Rate limiting detectado + backoff exponencial + persistência
+✅ **CFG-001 IMPLEMENTADO** - Configuração via env vars (disabled instances + debug tools)
 ⚠️ **Issue #3 ABERTO** - results_limit não funciona (comportamento esperado da API)
 
 ## Estrutura do Projeto (v0.2.0)
@@ -181,7 +228,7 @@ searxng-mcp/
 │   ├── models.py         # CircuitState, SearchResult, backoff
 │   ├── persistence.py    # Estado em disco (~/.cache/)
 │   └── server.py         # FastMCP + 4 tools
-├── tests/                # 38 testes (pytest)
+├── tests/                # 57 testes (pytest)
 ├── memory-bank/          # Documentação
 ├── pyproject.toml
 └── README.md
@@ -244,7 +291,7 @@ searxng-instance-mcp/
 │   ├── manager.py        # SearXNGManager
 │   ├── models.py         # CircuitState, SearchResult
 │   └── server.py         # FastMCP server
-├── tests/                # 33 testes (pytest)
+├── tests/                # 57 testes (pytest)
 ├── memory-bank/          # Documentação
 ├── pyproject.toml
 ├── README.md

@@ -8,43 +8,6 @@ Este arquivo contém apenas tarefas pendentes. Tarefas concluídas foram movidas
 
 ## Tarefas Pendentes
 
-### CFG-001: Configuração via mcp.json e Environment Variables
-
-**Data de Criação**: 2025-10-07
-
-**Status**: [ ] Pendente
-
-**Prioridade**: Alta
-
-**Resumo**: Implementar configuração via environment variables no mcp.json para instâncias desabilitadas e tools de debug.
-
-**Entregáveis**:
-- Configuração `SEARXNG_DISABLED_INSTANCES` - lista de URLs separadas por vírgula
-- Configuração `SEARXNG_DEBUG_TOOLS` - habilitar/desabilitar tools de debug (default: false)
-- Configuração `SEARXNG_BACKOFF_BASE` e `SEARXNG_BACKOFF_MAX`
-- Tools de debug desabilitadas por padrão, habilitadas via config
-- Filtragem de instâncias desabilitadas no manager
-- Não persistir instâncias explicitamente desabilitadas
-
-**Contexto**: Issue #4 revelou necessidade de poder desabilitar instâncias permanentemente (ex: search.ctq.ro com anti-bot). Usuário não quer novas tools visíveis - debug tools devem ser opt-in via config.
-
-**Critérios de Aceitação**:
-- Instâncias em `SEARXNG_DISABLED_INSTANCES` não são usadas em buscas
-- `SEARXNG_DEBUG_TOOLS=false` não registra as 3 tools de status (default)
-- `SEARXNG_DEBUG_TOOLS=true` registra tools de debug
-- Config via env vars funciona com mcp.json
-
-**Subtarefas**:
-- [ ] Modificar `server.py` para ler env vars e conditionally registrar debug tools
-- [ ] Modificar `manager.py` para filtrar instâncias desabilitadas
-- [ ] Modificar `persistence.py` para não persistir instâncias desabilitadas
-- [ ] Testar configuração via mcp.json
-- [ ] Atualizar documentação
-
-**Notas**: Relacionado à issue #4 - rate limiting detection
-
----
-
 ### CFG-002: Investigar e Corrigir Discovery Dinâmico
 
 **Data de Criação**: 2025-10-07
@@ -79,5 +42,6 @@ Este arquivo contém apenas tarefas pendentes. Tarefas concluídas foram movidas
 
 ## Notas
 
-- Todas as tarefas do backlog foram concluídas.
+- Tarefas concluídas foram movidas para `08-completedTasks.md`.
+- CFG-001: ✅ Implementada - Configuração via env vars
 - Para histórico completo, consulte `08-completedTasks.md`.

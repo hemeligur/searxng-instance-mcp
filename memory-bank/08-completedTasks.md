@@ -2,6 +2,32 @@
 
 Tarefas concluídas do projeto, ordenadas por código.
 
+---
+
+## Configuração (CFG)
+
+### CFG-001: Configuração via mcp.json e Environment Variables
+- **Data de Conclusão**: 2025-10-07
+- **Entregáveis**:
+  - `SEARXNG_DISABLED_INSTANCES` - lista de URLs separadas por vírgula
+  - `SEARXNG_DEBUG_TOOLS` - habilitar/desabilitar tools de debug (default: false)
+  - `SEARXNG_BACKOFF_BASE` e `SEARXNG_BACKOFF_MAX`
+  - Tools de debug desabilitadas por padrão, habilitadas via config
+  - Filtragem de instâncias desabilitadas no manager
+  - Não persistir instâncias explicitamente desabilitadas
+- **Arquivos Alterados**:
+  - `src/searxng_mcp/constants.py` - +env var config helpers
+  - `src/searxng_mcp/models.py` - +disabled field
+  - `src/searxng_mcp/server.py` - +conditional debug tools
+  - `src/searxng_mcp/manager.py` - +disabled filtering
+  - `src/searxng_mcp/persistence.py` - +filter disabled
+  - `memory-bank/04-techContext.md` - +env vars docs
+  - `README.md` - +config section
+- **Testes**: 19 novos testes em `tests/test_config.py`
+- **Resultado**: 57 testes passando ✅
+
+---
+
 ## Fase 1: Estrutura Base
 
 ### T-001: Criar `pyproject.toml` com dependências
