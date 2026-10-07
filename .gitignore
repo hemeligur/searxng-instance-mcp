@@ -8,7 +8,7 @@ __pycache__/
 venv/
 
 # uv
-uv.lock
+# uv.lock is versioned for reproducibility
 
 # IDE
 .idea/
@@ -22,3 +22,15 @@ Thumbs.db
 
 # MCP
 .mcp/
+
+# Pi rules (keep rules versioned)
+.pi/*
+!.pi/rules/
+
+# Build artifacts
+dist/
+*.egg-info/
+
+# Python build
+build/
+*.whl
