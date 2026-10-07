@@ -40,6 +40,7 @@ class InstanceStatus:
     last_success: Optional[float] = None  # timestamp
     circuit_open_at: Optional[float] = None  # timestamp when circuit opened
     error_message: Optional[str] = None
+    disabled: bool = False  # Explicitly disabled by user config
     
     # Exponential backoff settings
     backoff_until: Optional[float] = None  # timestamp when backoff ends
@@ -53,6 +54,10 @@ class InstanceStatus:
     def is_available(self) -> bool:
         """Check if instance is available for requests."""
         import time
+        
+        # Explicitly disabled instances are never available
+        if self.disabled:
+            return False
         
         # Check exponential backoff first
         if self.backoff_until is not None and time.time() < self.backoff_until:
@@ -151,6 +156,7 @@ class InstanceStatus:
             "backoff_until": self.backoff_until,
             "backoff_remaining": self.get_backoff_remaining(),
             "backoff_seconds": self.get_backoff_seconds(),
+            "disabled": self.disabled,
         }
 
 

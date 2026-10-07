@@ -23,7 +23,7 @@ from typing import Optional
 
 import httpx
 
-from .constants import DEFAULT_LIMIT, DEFAULT_TIMEOUT
+from .constants import DEFAULT_LIMIT, DEFAULT_TIMEOUT, get_disabled_instances, get_backoff_base, get_backoff_max
 from .discovery import discover_instances, get_fallback_instances
 from .models import CircuitState, InstanceStatus, SearchResponse, SearchResult
 from .persistence import load_instance_states, save_instance_states
@@ -71,10 +71,11 @@ class SearXNGManager:
     Features:
     - Automatic instance discovery from searx.space
     - Circuit breaker with CLOSED → OPEN → HALF_OPEN states
-    - Exponential backoff (60s base, 15min max)
+    - Exponential backoff (60s base, 15min max, configurable via env)
     - Persistent state across server restarts
     - Random instance selection for load distribution
     - Automatic fallback to hardcoded instances
+    - Support for disabled instances via SEARXNG_DISABLED_INSTANCES env var
     """
 
     def __init__(self) -> None:
@@ -85,6 +86,17 @@ class SearXNGManager:
         
         # Load persisted state
         self._load_persisted_state()
+        
+        # Apply disabled instances from config
+        self._apply_disabled_instances()
+    
+    def _apply_disabled_instances(self) -> None:
+        """Apply disabled instances from SEARXNG_DISABLED_INSTANCES env var."""
+        disabled_urls = get_disabled_instances()
+        for url in disabled_urls:
+            if url in self.instances:
+                self.instances[url].disabled = True
+                logger.info(f"Instance disabled by config: {url}")
 
     def _load_persisted_state(self) -> None:
         """Load persisted instance states from disk."""
@@ -124,21 +136,30 @@ class SearXNGManager:
         """Initialize instances asynchronously."""
         if self._initialized:
             return
-            
+        
+        # Get disabled instances from config
+        disabled_urls = get_disabled_instances()
+        
         try:
             # Try to discover instances from searx.space
             instances = await discover_instances(use_cache=True)
             
             # Add new instances, preserving existing state
+            # Skip instances that are explicitly disabled
             for url in instances:
                 if url not in self.instances:
-                    self.instances[url] = InstanceStatus(url=url)
+                    status = InstanceStatus(url=url)
+                    # Mark as disabled if in config
+                    if url in disabled_urls:
+                        status.disabled = True
+                    self.instances[url] = status
                 self._mark_dirty()
             
             # Shuffle for load distribution
             self._shuffle_instances()
             
-            logger.info(f"Initialized with {len(self.instances)} instances")
+            disabled_count = sum(1 for s in self.instances.values() if s.disabled)
+            logger.info(f"Initialized with {len(self.instances)} instances ({disabled_count} disabled)")
             self._initialized = True
             
             # Save state after initialization
@@ -157,10 +178,15 @@ class SearXNGManager:
 
     async def _load_fallback_instances_async(self) -> None:
         """Load fallback instances asynchronously."""
+        disabled_urls = get_disabled_instances()
         fallback_urls = get_fallback_instances()
         for url in fallback_urls:
             if url not in self.instances:
-                self.instances[url] = InstanceStatus(url=url)
+                status = InstanceStatus(url=url)
+                # Mark as disabled if in config
+                if url in disabled_urls:
+                    status.disabled = True
+                self.instances[url] = status
         self._shuffle_instances()
         logger.info(f"Loaded {len(fallback_urls)} fallback instances")
         self._initialized = True

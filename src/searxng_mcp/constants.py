@@ -21,6 +21,7 @@ Este módulo define todas as constantes utilizadas pelo projeto,
 incluindo instâncias fallback, timeouts, e configurações de cache.
 """
 
+import os
 from pathlib import Path
 
 # =============================================================================
@@ -94,3 +95,57 @@ Uma instância é considerada válida apenas se tiver todos estes motores.
 
 SEARX_API_URL: str = "https://searx.space/api/v1/instances"
 """URL da API do searx.space para descoberta de instâncias."""
+
+# =============================================================================
+# CONFIGURAÇÕES VIA ENVIRONMENT VARIABLES
+# =============================================================================
+
+# Instâncias explicitamente desabilitadas (separadas por vírgula)
+SEARXNG_DISABLED_INSTANCES: str = os.environ.get("SEARXNG_DISABLED_INSTANCES", "")
+
+# Habilitar tools de debug (get_instances_status, reset_instance, get_available_instances)
+SEARXNG_DEBUG_TOOLS: bool = os.environ.get("SEARXNG_DEBUG_TOOLS", "false").lower() == "true"
+
+# Configurações de backoff
+SEARXNG_BACKOFF_BASE: int = int(os.environ.get("SEARXNG_BACKOFF_BASE", "60"))
+SEARXNG_BACKOFF_MAX: int = int(os.environ.get("SEARXNG_BACKOFF_MAX", "900"))
+
+
+def get_disabled_instances() -> set[str]:
+    """Get disabled instances from SEARXNG_DISABLED_INSTANCES env var.
+    
+    Returns:
+        Set of disabled instance URLs.
+    """
+    env_val = os.environ.get("SEARXNG_DISABLED_INSTANCES", "")
+    if not env_val:
+        return set()
+    return set(url.strip().rstrip('/') for url in env_val.split(",") if url.strip())
+
+
+def is_debug_enabled() -> bool:
+    """Check if debug tools should be enabled via SEARXNG_DEBUG_TOOLS env var.
+    
+    Returns:
+        True if debug tools should be registered.
+    """
+    value = os.environ.get("SEARXNG_DEBUG_TOOLS", "false").lower()
+    return value in ("true", "1", "yes")
+
+
+def get_backoff_base() -> int:
+    """Get backoff base value from SEARXNG_BACKOFF_BASE env var.
+    
+    Returns:
+        Backoff base in seconds (default: 60).
+    """
+    return int(os.environ.get("SEARXNG_BACKOFF_BASE", "60"))
+
+
+def get_backoff_max() -> int:
+    """Get backoff max value from SEARXNG_BACKOFF_MAX env var.
+    
+    Returns:
+        Backoff max in seconds (default: 900).
+    """
+    return int(os.environ.get("SEARXNG_BACKOFF_MAX", "900"))

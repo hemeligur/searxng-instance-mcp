@@ -42,6 +42,9 @@ def _ensure_cache_dir() -> None:
 def load_instance_states() -> dict[str, InstanceStatus]:
     """Load instance states from disk.
     
+    Note: Instances that are explicitly disabled via SEARXNG_DISABLED_INSTANCES
+    env var are not loaded from disk - they will be marked as disabled at runtime.
+    
     Returns:
         Dictionary mapping URL to InstanceStatus.
     """
@@ -53,8 +56,22 @@ def load_instance_states() -> dict[str, InstanceStatus]:
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
 
+        # Get currently disabled instances from config
+        from .constants import get_disabled_instances
+        disabled_urls = get_disabled_instances()
+
         instances: dict[str, InstanceStatus] = {}
+        skipped_disabled = 0
+        
         for url, state_data in data.get("instances", {}).items():
+            # Normalize URL for comparison (remove trailing slash)
+            normalized_url = url.rstrip('/')
+            
+            # Skip instances that are disabled in config
+            if normalized_url in disabled_urls or url in disabled_urls:
+                skipped_disabled += 1
+                continue
+                
             status = InstanceStatus(url=url)
             status.state = CircuitState(state_data.get("state", "closed"))
             status.failure_count = state_data.get("failure_count", 0)
@@ -65,6 +82,8 @@ def load_instance_states() -> dict[str, InstanceStatus]:
             status.backoff_until = state_data.get("backoff_until")
             instances[url] = status
 
+        if skipped_disabled > 0:
+            logger.info(f"Skipped {skipped_disabled} disabled instances when loading state")
         logger.info(f"Loaded state for {len(instances)} instances from disk")
         return instances
 
@@ -79,6 +98,9 @@ def load_instance_states() -> dict[str, InstanceStatus]:
 def save_instance_states(instances: dict[str, InstanceStatus]) -> bool:
     """Save instance states to disk.
     
+    Note: Instances that are explicitly disabled via SEARXNG_DISABLED_INSTANCES
+    env var are NOT persisted - they will be disabled at runtime only.
+    
     Args:
         instances: Dictionary mapping URL to InstanceStatus.
         
@@ -86,6 +108,14 @@ def save_instance_states(instances: dict[str, InstanceStatus]) -> bool:
         True if saved successfully, False otherwise.
     """
     _ensure_cache_dir()
+
+    # Filter out disabled instances - they should not be persisted
+    enabled_instances = {
+        url: status for url, status in instances.items()
+        if not status.disabled
+    }
+    
+    skipped_disabled = len(instances) - len(enabled_instances)
 
     data = {
         "version": 1,
@@ -100,14 +130,17 @@ def save_instance_states(instances: dict[str, InstanceStatus]) -> bool:
                 "error_message": status.error_message,
                 "backoff_until": status.backoff_until,
             }
-            for url, status in instances.items()
+            for url, status in enabled_instances.items()
         },
     }
 
     try:
         with open(STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
-        logger.debug(f"Saved state for {len(instances)} instances to disk")
+        if skipped_disabled > 0:
+            logger.debug(f"Saved state for {len(enabled_instances)} instances ({skipped_disabled} disabled skipped)")
+        else:
+            logger.debug(f"Saved state for {len(enabled_instances)} instances to disk")
         return True
     except IOError as e:
         logger.error(f"Failed to save instance state: {e}")
