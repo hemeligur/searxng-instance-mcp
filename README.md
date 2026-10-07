@@ -16,9 +16,9 @@
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────────────────┐
 │   Cliente   │────▶│  SearXNG MCP     │────▶│  Instâncias Públicas Online │
 │   (Pi/AI)   │◀────│  (este projeto)  │◀────│                             │
-└─────────────┘     └──────────────────┘     │  • sx.xo.st                │
-                           │                 │  • search.ctq.ro           │
-                           │                 │  • searx.space (discovery) │
+└─────────────┘     └──────────────────┘     │  • sx.xo.st                 │
+                           │                 │  • search.ctq.ro            │
+                           │                 │  • searx.space (discovery)  │
                            ▼                 └─────────────────────────────┘
                     ┌──────────────────┐
                     │  Cache Local     │
