@@ -1,6 +1,6 @@
 # SearXNG Local (Docker)
 
-[![🇧🇷 Português](./searxng-local.md)](./searxng-local.md)
+[![🇧🇷 Português](../searxng-local.md)](../searxng-local.md)
 
 This document explains how to run a local SearXNG instance, in case you need **maximum privacy** or prefer not to depend on public instances.
 

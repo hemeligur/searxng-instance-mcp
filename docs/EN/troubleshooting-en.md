@@ -1,6 +1,6 @@
 # Troubleshooting - SearXNG Instance MCP
 
-[![🇧🇷 Português](./troubleshooting.md)](./troubleshooting.md)
+[![🇧🇷 Português](../usuario/troubleshooting.md)](../usuario/troubleshooting.md)
 
 ## Common Problems and Solutions
 

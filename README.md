@@ -2,11 +2,11 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
-[![🇺🇸 English](./README-en.md)](./README-en.md)
+[![🇺🇸 English](./docs/EN/README-en.md)](./docs/EN/README-en.md)
 
 **Cliente MCP para busca web via SearXNG** — usa instâncias públicas online com fallback automático.
 
-> ⚠️ **Nota**: Este projeto é um **cliente** que se conecta a instâncias SearXNG públicas/online (como `sx.xo.st`, `search.ctq.ro`). Se você quer rodar sua própria instância SearXNG localmente, consulte [docs/searxng-local.md](docs/searxng-local.md).
+> ⚠️ **Nota**: Este projeto é um **cliente** que se conecta a instâncias SearXNG públicas/online (como `sx.xo.st`, `search.ctq.ro`). Se você quer rodar sua própria instância SearXNG localmente, consulte [docs/searxng-local.md](docs/searxng-local.md) ou [docs/EN/searxng-local-en.md](docs/EN/searxng-local-en.md) (EN).
 
 ---
 
@@ -193,10 +193,13 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m sear
 
 ### Para Usuários
 - [Guia SearXNG](docs/usuario/searxng-guide.md) - Como usar SearXNG para busca web
+- [SearXNG Guide (EN)](docs/EN/searxng-guide-en.md) - How to use SearXNG for web search
 - [Troubleshooting](docs/usuario/troubleshooting.md) - Solução de problemas comuns
+- [Troubleshooting (EN)](docs/EN/troubleshooting-en.md) - Common problems and solutions
 
 ### Para Desenvolvedores
 - [Arquitetura](docs/developer/arquitetura.md) - Visão técnica da arquitetura
+- [Architecture (EN)](docs/EN/architecture.md) - Technical architecture overview - Visão técnica da arquitetura
 - [Debug Report](docs/developer/mcp-debug-report.md) - Histórico de debugging do MCP
 
 ### Skills
@@ -219,7 +222,7 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m sear
 3. **Timeout**
    - Aumente `SEARXNG_TIMEOUT` se necessário
 
-Consulte [docs/usuario/troubleshooting.md](docs/usuario/troubleshooting.md) para problemas detalhados.
+Consulte [docs/usuario/troubleshooting.md](docs/usuario/troubleshooting.md) ou [docs/EN/troubleshooting-en.md](docs/EN/troubleshooting-en.md) para problemas detalhados.
 
 ### Debugging
 

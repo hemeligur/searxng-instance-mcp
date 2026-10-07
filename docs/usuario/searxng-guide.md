@@ -1,6 +1,6 @@
 # Manual: Busca na Web com SearXNG
 
-[![🇺🇸 English](./searxng-guide-en.md)](./searxng-guide-en.md)
+[![🇺🇸 English](../EN/searxng-guide-en.md)](../EN/searxng-guide-en.md)
 
 ## O que é SearXNG?
 

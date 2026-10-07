@@ -1,6 +1,6 @@
 # Arquitetura do SearXNG Instance MCP
 
-[![🇺🇸 English](./architecture.md)](./architecture.md)
+[![🇺🇸 English](../EN/architecture.md)](../EN/architecture.md)
 
 ## Visão Geral
 

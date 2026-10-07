@@ -1,6 +1,6 @@
 # Architecture - SearXNG Instance MCP
 
-[![🇧🇷 Português](./arquitetura.md)](./arquitetura.md)
+[![🇧🇷 Português](../developer/arquitetura.md)](../developer/arquitetura.md)
 
 This document describes the technical architecture of the MCP server for web search via SearXNG.
 

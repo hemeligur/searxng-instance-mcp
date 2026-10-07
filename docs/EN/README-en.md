@@ -2,11 +2,11 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
-[![🇧🇷 Português](./README.md)](./README.md)
+[![🇧🇷 Português](../../README.md)](../../README.md)
 
 **MCP Client for Web Search via SearXNG** — connects to public online instances with automatic fallback.
 
-> ⚠️ **Note**: This project is a **client** that connects to public/online SearXNG instances (like `sx.xo.st`, `search.ctq.ro`). If you want to run your own SearXNG instance locally, see [docs/searxng-local-en.md](docs/searxng-local-en.md).
+> ⚠️ **Note**: This project is a **client** that connects to public/online SearXNG instances (like `sx.xo.st`, `search.ctq.ro`). If you want to run your own SearXNG instance locally, see [searxng-local-en.md](./searxng-local-en.md).
 
 ---
 
@@ -192,11 +192,11 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m sear
 ## Documentation
 
 ### For Users
-- [SearXNG Guide](docs/usuario/searxng-guide-en.md) - How to use SearXNG for web search
-- [Troubleshooting](docs/usuario/troubleshooting-en.md) - Common problems and solutions
+- [SearXNG Guide](searxng-guide-en.md) - How to use SearXNG for web search
+- [Troubleshooting](troubleshooting-en.md) - Common problems and solutions
 
 ### For Developers
-- [Architecture](docs/developer/architecture.md) - Technical architecture overview
+- [Architecture](architecture.md) - Technical architecture overview
 - [Debug Report](docs/developer/mcp-debug-report.md) - MCP debugging history
 
 ### Skills
@@ -219,7 +219,7 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m sear
 3. **Timeout**
    - Increase `SEARXNG_TIMEOUT` if needed
 
-See [docs/usuario/troubleshooting-en.md](docs/usuario/troubleshooting-en.md) for detailed troubleshooting.
+See [troubleshooting-en.md](./troubleshooting-en.md) for detailed troubleshooting.
 
 ### Debugging
 
