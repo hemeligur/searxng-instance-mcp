@@ -226,15 +226,38 @@ class DiscoveredInstance:
     engines: list[str]
 
     @classmethod
-    def from_api_response(cls, data: dict) -> "DiscoveredInstance":
-        """Create from searx.space API response."""
-        network = data.get("network", {})
+    def from_api_response(cls, url: str, data: dict) -> "DiscoveredInstance":
+        """Create from searx.space API response.
+
+        Args:
+            url: The instance URL (used as key in the API response).
+            data: The instance data dictionary from the API.
+
+        Returns:
+            DiscoveredInstance instance.
+        """
+        # New format has uptime directly under 'uptime' key
+        uptime_data = data.get("uptime", {})
+        uptime = uptime_data.get("uptimeDay", uptime_data.get("uptimeWeek", 0))
+
+        # TLS grade is in tls.grade
+        tls = data.get("tls", {})
+        tls_rank = tls.get("grade", "")
+
+        # Engines is now a dict, extract engine names
+        engines_data = data.get("engines", {})
+        engine_names = list(engines_data.keys()) if engines_data else []
+
+        # Extract name from alternativeUrls or use URL
+        alt_urls = data.get("alternativeUrls", {})
+        name = url if not alt_urls else list(alt_urls.values())[0] if alt_urls else url
+
         return cls(
-            name=data.get("name", ""),
-            url=data.get("url", ""),
-            uptime=network.get("uptime", 0),
-            tls_rank=network.get("tls_rank", ""),
-            engines=data.get("engines", []),
+            name=name,
+            url=url,
+            uptime=uptime,
+            tls_rank=tls_rank,
+            engines=engine_names,
         )
 
     def is_healthy(self) -> bool:

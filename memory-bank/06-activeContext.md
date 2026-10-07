@@ -146,6 +146,83 @@ SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
 
 ---
 
+## CFG-002 - Discovery Dinâmico Corrigido (2025-10-07)
+
+### Problema
+A API do searx.space estava retornando **404** no endpoint `/api/v1/instances`. O sistema estava usando apenas **3-4 instâncias fallback**.
+
+### Investigação Realizada
+1. **Testei múltiplos endpoints**:
+   - `https://searx.space/api/v1/instances` → **404** ❌
+   - `https://searx.space/data/instances.json` → **200** ✅ (endpoint correto!)
+   - `https://github.com/purujawa06-bot/SearXNG-active-instance` → **200** ✅
+
+2. **Estrutura da API corrigida**:
+   - URL é agora a **chave** do dicionário, não um campo `url`
+   - `uptime` está no nível raiz, não em `network.uptime`
+   - Engines é um **dict** com nomes como chaves
+
+### Soluções Implementadas
+
+#### 1. Novo Endpoint da API (`discovery.py`)
+```python
+SEARX_SPACE_API = "https://searx.space/data/instances.json"  # Era /api/v1/instances
+```
+
+#### 2. Fallback para GitHub Active Instances (`discovery.py`)
+```python
+GITHUB_ACTIVE_INSTANCES_URL = (
+    "https://raw.githubusercontent.com/purujawa06-bot/SearXNG-active-instance/main/active.json"
+)
+```
+- Provedor externo que verifica instâncias com JSON search funcionando
+- Retorna apenas instâncias que passaram no teste: HTTP 200 + JSON válido
+
+#### 3. Lista Expandida de Fallbacks
+```python
+FALLBACK_INSTANCES = [
+    # Primary reliable instances
+    "https://sx.xo.st",
+    "https://search.ctq.ro",
+    "https://www.isci.si",
+    # Additional from searx.space (TLS A+, 100% uptime)
+    "https://searx.ononoki.org",
+    "https://search.femboy.ad",
+    "https://searx.tiekoetter.com",
+    "https://baresearch.org",
+    "https://search.yuri.llc",
+    "https://search.lumy.live",
+    # From similar MCP projects
+    "https://metacat.online",
+    "https://search.080609.xyz",
+    "https://search.canine.tools",
+    "https://search.indst.eu",
+]  # Total: 13 instâncias
+```
+
+#### 4. Estratégia de Fallback em Cascata
+```
+1. Cache válido → retorna cache
+2. searx.space/data/instances.json → até 20 instâncias filtradas
+3. GitHub active instances → instâncias verificadas JSON
+4. Fallback hardcoded → 13 instâncias sempre disponíveis
+```
+
+### Resultados
+- **Antes**: ~3 instâncias usadas
+- **Depois**: **20 instâncias** do searx.space API + 13 fallbacks
+- **Testes**: 60 passando ✅
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `discovery.py` | Endpoint corrigido, GitHub fallback, lista expandida |
+| `models.py` | `from_api_response()` atualizado para novo formato |
+| `tests/test_discovery.py` | Novos testes para GitHub fallback |
+| `tests/conftest.py` | Fixture atualizada para novo formato |
+
+---
+
 ## Melhorias de Resiliência (2025-10-07)
 
 ### Problema Identificado
@@ -213,6 +290,7 @@ SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
 ✅ **PRODUTO PRONTO** - MCP funcionando globalmente no Pi
 ✅ **Issue #4 CORRIGIDO** - Rate limiting detectado + backoff exponencial + persistência
 ✅ **CFG-001 IMPLEMENTADO** - Configuração via env vars (disabled instances + debug tools)
+✅ **CFG-002 IMPLEMENTADO** - Discovery dinâmico corrigido (API searx.space + GitHub fallback)
 ⚠️ **Issue #3 ABERTO** - results_limit não funciona (comportamento esperado da API)
 
 ## Estrutura do Projeto (v0.2.0)

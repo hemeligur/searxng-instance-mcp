@@ -26,6 +26,21 @@ Tarefas concluídas do projeto, ordenadas por código.
 - **Testes**: 19 novos testes em `tests/test_config.py`
 - **Resultado**: 57 testes passando ✅
 
+### CFG-002: Discovery Dinâmico Corrigido
+- **Data de Conclusão**: 2025-10-07
+- **Problema**: API do searx.space `/api/v1/instances` retornava 404
+- **Entregáveis**:
+  - Endpoint corrigido: `https://searx.space/data/instances.json`
+  - Fallback para GitHub: `purujawa06-bot/SearXNG-active-instance`
+  - Lista expandida: 13 instâncias fallback (antes: 3-4)
+  - Discovery retorna até 20 instâncias filtradas do searx.space
+- **Arquivos Alterados**:
+  - `src/searxng_mcp/discovery.py` - endpoint, GitHub fallback, lista expandida
+  - `src/searxng_mcp/models.py` - `from_api_response()` atualizado para novo formato
+  - `tests/test_discovery.py` - +testes para GitHub fallback
+  - `tests/conftest.py` - fixture atualizada
+- **Testes**: 60 testes passando ✅
+
 ---
 
 ## Fase 1: Estrutura Base
