@@ -55,7 +55,11 @@ GET https://<instancia>/search
 |-----------|-----------|---------|
 | `q` | Query de busca | `q=python+tutorial` |
 | `format` | Formato da resposta | `format=json` |
-| `limit` | Número de resultados | `limit=10` |
+| `lang` | Idioma | `lang=pt-BR` |
+| `pageno` | Número da página | `pageno=1` |
+| `safesearch` | Filtro safe search (0-2) | `safesearch=0` |
+
+**Nota**: O parâmetro `limit` **não é suportado** pela API do SearXNG. O número de resultados é fixo (~10 por página). Referência: https://docs.searxng.org/dev/search_api.html
 | `lang` | Idioma | `lang=pt-BR` |
 
 ### Exemplo de Requisição

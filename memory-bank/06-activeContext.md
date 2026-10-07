@@ -61,8 +61,131 @@ docs/
 
 ---
 
+## Bugs Investigados (2025-10-07)
+
+### Issue #3 - results_limit ignorado
+- **URL**: https://github.com/hemeligur/searxng-instance-mcp/issues/3
+- **Problema**: Parâmetro `results_limit` não funciona
+- **Status**: Aberto - não prioritário (comportamento esperado da API SearXNG)
+
+### Issue #4 - HTTP 429/503 tratado como sucesso ✅ CORRIGIDO
+- **URL**: https://github.com/hemeligur/searxng-instance-mcp/issues/4
+- **Problema**: Rate limiting retorna 0 resultados mas é marcado como sucesso
+- **Causa**: SearXNG retorna HTTP 200 com JSON vazio ao invés de HTTP 429
+
+#### Solução Implementada
+1. **Detecção de rate limiting implícito** (`manager.py`):
+   - Respostas HTTP 200 com `{"results": []}` agora são tratadas como `success=False`
+   - Flag `rate_limited=True` adicionado ao `SearchResponse`
+
+2. **Suporte a HTTP 418/403**:
+   - Códigos 418 (anti-bot) e 403 (forbidden) tratados como rate limiting
+
+3. **Propagação do flag**:
+   - `rate_limited` propagado para resposta final agregada
+   - Circuit breaker atualizado corretamente
+
+4. **Testes adicionados** (6 novos):
+   - `test_rate_limited_empty_results_marked_as_failure`
+   - `test_rate_limited_empty_body_marked_as_failure`
+   - `test_http_418_treated_as_failure`
+   - `test_http_403_treated_as_failure`
+   - `test_rate_limited_falls_back_to_next_instance`
+   - `test_rate_limited_circuit_breaker_updated`
+
+#### Arquivos Alterados
+- `src/searxng_mcp/models.py`: Added `rate_limited` field to `SearchResponse`
+- `src/searxng_mcp/manager.py`: Added empty results detection, HTTP 418/403 handling
+- `tests/test_manager.py`: Added 6 new tests for rate limiting scenarios
+
+---
+
+## Melhorias de Resiliência (2025-10-07)
+
+### Problema Identificado
+- Estado não persistia entre execuções do servidor MCP
+- Backoff inexistente - instâncias rate limited eram chamadas repetidamente
+- Apenas 3 fallback instances usadas, sem distribuição de carga
+- Discovery não funcionava em contexto async
+
+### Soluções Implementadas
+
+#### 1. Singleton Pattern (`manager.py`)
+- `SearXNGManager` agora é singleton global
+- `async_get_manager()` garante instância única
+- Estado mantido em memória durante vida do servidor
+
+#### 2. Persistência de Estado (`persistence.py` - NOVO)
+```
+~/.cache/searxng-mcp/instance_state.json
+```
+- Salva/carrega estado de circuit breaker e backoff
+- Preserva estado entre reinicializações do servidor
+
+#### 3. Backoff Exponencial (`models.py`)
+```python
+# Backoff exponencial por falha
+1 falha  → 60s
+2 falhas → 120s
+3 falhas → 240s
+4 falhas → 480s
+5+ falhas → 900s (max)
+```
+
+#### 4. Circuit Breaker Aprimorado
+- Estado: CLOSED → OPEN → HALF_OPEN
+- 3 falhas consecutivas = OPEN
+- 5 minutos TTL para transição OPEN → HALF_OPEN
+
+#### 5. Distribuição de Carga
+- Instâncias embaralhadas (shuffle) a cada inicialização
+- Fallback automático para próxima instância disponível
+
+### Novas Tools MCP
+1. **`get_instances_status`** - Status completo de todas instâncias
+2. **`reset_instance(url)`** - Resetar backoff de instância específica
+3. **`get_available_instances`** - Lista instâncias disponíveis
+
+### Arquivos Alterados/Criados
+| Arquivo | Mudança |
+|---------|---------|
+| `models.py` | +Exponential backoff, `backoff_until`, `to_dict()` |
+| `persistence.py` | **NOVO** - Load/save estado em disco |
+| `manager.py` | +Singleton, +shuffle, +persistência |
+| `server.py` | +3 novas tools |
+| `__init__.py` | Versão 0.2.0 |
+| `tests/test_manager.py` | Rewritten, +7 novos testes |
+
+### Testes
+```
+38 testes passando
+```
+
+---
+
 ## Status Atual
 ✅ **PRODUTO PRONTO** - MCP funcionando globalmente no Pi
+✅ **Issue #4 CORRIGIDO** - Rate limiting detectado + backoff exponencial + persistência
+⚠️ **Issue #3 ABERTO** - results_limit não funciona (comportamento esperado da API)
+
+## Estrutura do Projeto (v0.2.0)
+
+```
+searxng-mcp/
+├── src/searxng_mcp/
+│   ├── __init__.py       # v0.2.0
+│   ├── __main__.py       # Entry point
+│   ├── constants.py      # FALLBACK_INSTANCES, configs
+│   ├── discovery.py      # InstanceDiscovery (searx.space API)
+│   ├── manager.py        # SearXNGManager (singleton + persistência)
+│   ├── models.py         # CircuitState, SearchResult, backoff
+│   ├── persistence.py    # Estado em disco (~/.cache/)
+│   └── server.py         # FastMCP + 4 tools
+├── tests/                # 38 testes (pytest)
+├── memory-bank/          # Documentação
+├── pyproject.toml
+└── README.md
+```
 
 ## Configuração Pi (2025-10-06)
 
@@ -121,7 +244,7 @@ searxng-instance-mcp/
 │   ├── manager.py        # SearXNGManager
 │   ├── models.py         # CircuitState, SearchResult
 │   └── server.py         # FastMCP server
-├── tests/                # 27 testes (pytest)
+├── tests/                # 33 testes (pytest)
 ├── memory-bank/          # Documentação
 ├── pyproject.toml
 ├── README.md
