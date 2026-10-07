@@ -16,7 +16,9 @@
 
 """SearXNG Manager - Pool management and search execution with circuit breaker."""
 
+import asyncio
 import logging
+import random
 from typing import Optional
 
 import httpx
@@ -24,8 +26,43 @@ import httpx
 from .constants import DEFAULT_LIMIT, DEFAULT_TIMEOUT
 from .discovery import discover_instances, get_fallback_instances
 from .models import CircuitState, InstanceStatus, SearchResponse, SearchResult
+from .persistence import load_instance_states, save_instance_states
 
 logger = logging.getLogger(__name__)
+
+
+# Global singleton instance
+_manager_instance: Optional["SearXNGManager"] = None
+_manager_lock = asyncio.Lock()
+
+
+def get_manager() -> "SearXNGManager":
+    """Get the singleton SearXNGManager instance.
+    
+    Returns:
+        The singleton manager instance.
+    """
+    global _manager_instance
+    if _manager_instance is None:
+        _manager_instance = SearXNGManager()
+    return _manager_instance
+
+
+async def async_get_manager() -> "SearXNGManager":
+    """Get the singleton manager instance asynchronously.
+    
+    This is the preferred method when called from async context.
+    
+    Returns:
+        The singleton manager instance.
+    """
+    global _manager_instance
+    if _manager_instance is None:
+        async with _manager_lock:
+            if _manager_instance is None:
+                _manager_instance = SearXNGManager()
+                await _manager_instance._async_initialize()
+    return _manager_instance
 
 
 class SearXNGManager:
@@ -34,46 +71,100 @@ class SearXNGManager:
     Features:
     - Automatic instance discovery from searx.space
     - Circuit breaker with CLOSED → OPEN → HALF_OPEN states
-    - 5-minute TTL for OPEN → HALF_OPEN transition
+    - Exponential backoff (60s base, 15min max)
+    - Persistent state across server restarts
+    - Random instance selection for load distribution
     - Automatic fallback to hardcoded instances
     """
 
     def __init__(self) -> None:
         """Initialize the SearXNG manager."""
         self.instances: dict[str, InstanceStatus] = {}
-        self._initialize_instances()
+        self._initialized = False
+        self._dirty = False  # Track if state needs to be saved
+        
+        # Load persisted state
+        self._load_persisted_state()
 
-    def _initialize_instances(self) -> None:
-        """Initialize instances from discovery or fallback.
-
-        Populates the instance pool with URLs from discovery
-        or falls back to hardcoded instances if discovery fails.
-        """
+    def _load_persisted_state(self) -> None:
+        """Load persisted instance states from disk."""
         try:
-            import asyncio
-            
-            # Check if we're already in an event loop
-            loop = asyncio.get_running_loop()
-            # If we get here, we're in an async context - defer to sync fallback
-            logger.warning("Cannot use async discovery from async context, using fallback")
-            self._load_fallback_instances()
-        except RuntimeError:
-            # No running event loop - safe to use asyncio.run()
-            try:
-                instances = asyncio.run(discover_instances(use_cache=True))
-                for url in instances:
-                    self.instances[url] = InstanceStatus(url=url)
-                logger.info(f"Loaded {len(instances)} instances from discovery")
-            except Exception as e:
-                logger.warning(f"Failed to discover instances: {e}, using fallback")
-                self._load_fallback_instances()
+            persisted = load_instance_states()
+            # Merge with existing instances, preserving state
+            for url, status in persisted.items():
+                self.instances[url] = status
+            if persisted:
+                logger.info(f"Loaded {len(persisted)} persisted instance states")
+        except Exception as e:
+            logger.warning(f"Failed to load persisted state: {e}")
 
-    def _load_fallback_instances(self) -> None:
-        """Load fallback instances."""
+    def save_state(self) -> bool:
+        """Save current instance states to disk.
+        
+        Returns:
+            True if saved successfully.
+        """
+        if not self._dirty:
+            return True
+            
+        try:
+            success = save_instance_states(self.instances)
+            if success:
+                self._dirty = False
+            return success
+        except Exception as e:
+            logger.error(f"Failed to save state: {e}")
+            return False
+
+    def _mark_dirty(self) -> None:
+        """Mark state as modified, needs saving."""
+        self._dirty = True
+
+    async def _async_initialize(self) -> None:
+        """Initialize instances asynchronously."""
+        if self._initialized:
+            return
+            
+        try:
+            # Try to discover instances from searx.space
+            instances = await discover_instances(use_cache=True)
+            
+            # Add new instances, preserving existing state
+            for url in instances:
+                if url not in self.instances:
+                    self.instances[url] = InstanceStatus(url=url)
+                self._mark_dirty()
+            
+            # Shuffle for load distribution
+            self._shuffle_instances()
+            
+            logger.info(f"Initialized with {len(self.instances)} instances")
+            self._initialized = True
+            
+            # Save state after initialization
+            self.save_state()
+            
+        except Exception as e:
+            logger.warning(f"Failed to discover instances: {e}, using fallback")
+            await self._load_fallback_instances_async()
+
+    def _shuffle_instances(self) -> None:
+        """Shuffle instance order for load distribution."""
+        urls = list(self.instances.keys())
+        random.shuffle(urls)
+        # Recreate dict in new order
+        self.instances = {url: self.instances[url] for url in urls}
+
+    async def _load_fallback_instances_async(self) -> None:
+        """Load fallback instances asynchronously."""
         fallback_urls = get_fallback_instances()
         for url in fallback_urls:
-            self.instances[url] = InstanceStatus(url=url)
+            if url not in self.instances:
+                self.instances[url] = InstanceStatus(url=url)
+        self._shuffle_instances()
         logger.info(f"Loaded {len(fallback_urls)} fallback instances")
+        self._initialized = True
+        self._mark_dirty()
 
     def _update_instance_status(
         self, url: str, success: bool, error: Optional[str] = None
@@ -96,10 +187,14 @@ class SearXNGManager:
             logger.debug(f"Instance {url}: success, circuit CLOSED")
         else:
             status.record_failure(error or "Unknown error")
+            backoff_secs = status.get_backoff_seconds()
             logger.debug(
                 f"Instance {url}: failure ({error}), "
-                f"state={status.state.value}, failures={status.failure_count}"
+                f"state={status.state.value}, failures={status.failure_count}, "
+                f"backoff={backoff_secs}s"
             )
+        
+        self._mark_dirty()
 
     async def search(self, query: str, limit: int = DEFAULT_LIMIT) -> SearchResponse:
         """Execute a search query using available SearXNG instances.
@@ -117,6 +212,13 @@ class SearXNGManager:
             SearchResponse with results if successful, or error details if all
             instances failed.
         """
+        # Ensure initialized
+        if not self._initialized:
+            await self._async_initialize()
+        
+        # Save state before making requests
+        self.save_state()
+
         if not query or not query.strip():
             return SearchResponse(
                 success=False,
@@ -129,11 +231,16 @@ class SearXNGManager:
 
         # Try each available instance
         errors: list[dict] = []
+        skipped: list[str] = []
 
         for url, status in self.instances.items():
-            # Skip if circuit is OPEN and TTL hasn't expired
+            # Check availability (includes backoff check)
             if not status.is_available():
-                logger.debug(f"Skipping {url}: circuit {status.state.value}")
+                backoff_remaining = status.get_backoff_remaining()
+                if backoff_remaining and backoff_remaining > 0:
+                    skipped.append(f"{url} (backoff: {backoff_remaining:.0f}s)")
+                else:
+                    skipped.append(f"{url} (circuit: {status.state.value})")
                 continue
 
             # Attempt search on this instance
@@ -142,9 +249,15 @@ class SearXNGManager:
                 if result.success:
                     result.instance_used = url
                     self._update_instance_status(url, success=True)
+                    # Save state after successful request
+                    self.save_state()
                     return result
                 else:
-                    errors.append({"instance": url, "error": result.error})
+                    errors.append({
+                        "instance": url,
+                        "error": result.error,
+                        "rate_limited": result.rate_limited,
+                    })
                     self._update_instance_status(url, success=False, error=result.error)
 
             except httpx.TimeoutException:
@@ -174,14 +287,26 @@ class SearXNGManager:
         # All instances failed
         logger.error(f"All {len(errors)} instances failed for query: {query}")
 
-        return SearchResponse(
+        # Check if any instance was rate limited
+        any_rate_limited = any(
+            isinstance(e, dict) and e.get("rate_limited") for e in errors
+        )
+
+        # Build response with skipped info
+        response = SearchResponse(
             success=False,
             query=query,
             error="All instances unavailable",
-            message="Failed to search using any available instance. "
-            "All instances may be experiencing issues.",
+            message=f"Failed to search using any available instance. "
+            f"{len(skipped)} instances skipped (backoff/circuit breaker).",
             details=errors,
+            rate_limited=any_rate_limited,
         )
+        
+        # Save state after all instances failed
+        self.save_state()
+        
+        return response
 
     async def _try_instance(
         self, url: str, query: str, limit: int
@@ -207,13 +332,24 @@ class SearXNGManager:
         async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
             response = await client.get(search_url, params=params)
 
-            # Handle rate limiting
+            # Handle rate limiting (HTTP 429)
             if response.status_code == 429:
                 return SearchResponse(
                     success=False,
                     query=query,
                     error="Rate limited (429)",
                     message="Instance is rate limiting requests",
+                    rate_limited=True,
+                )
+
+            # Handle anti-bot protection (HTTP 418) and other client errors
+            if response.status_code in (418, 403):
+                return SearchResponse(
+                    success=False,
+                    query=query,
+                    error=f"Access blocked ({response.status_code})",
+                    message="Instance blocked the request (possible anti-bot protection)",
+                    rate_limited=True,
                 )
 
             # Handle server errors
@@ -225,7 +361,7 @@ class SearXNGManager:
                     message="Instance returned a server error",
                 )
 
-            # Raise for other HTTP errors
+            # Raise for other HTTP errors (4xx except 418, 403, 429)
             response.raise_for_status()
 
             # Parse response
@@ -233,8 +369,9 @@ class SearXNGManager:
 
         # Extract results from SearXNG response format
         results: list[SearchResult] = []
+        raw_results = data.get("results", [])
 
-        for item in data.get("results", []):
+        for item in raw_results:
             result = SearchResult(
                 url=item.get("url", ""),
                 title=item.get("title", ""),
@@ -243,6 +380,18 @@ class SearXNGManager:
                 category=item.get("category", "general"),
             )
             results.append(result)
+
+        # Detect implicit rate limiting: HTTP 200 with empty results
+        # SearXNG returns empty results when rate limited instead of HTTP 429
+        if len(results) == 0:
+            return SearchResponse(
+                success=False,
+                query=query,
+                error="Empty results (possible rate limiting)",
+                message="Instance returned empty results. "
+                "This typically indicates rate limiting or temporary unavailability.",
+                rate_limited=True,
+            )
 
         # Also check for answers (SearXNG can return answers alongside results)
         # Not adding to results list as they're typically summaries
@@ -263,6 +412,7 @@ class SearXNGManager:
         closed = 0
         open_count = 0
         half_open = 0
+        in_backoff = 0
 
         for status in self.instances.values():
             if status.state == CircuitState.CLOSED:
@@ -271,39 +421,56 @@ class SearXNGManager:
                 open_count += 1
             else:
                 half_open += 1
+            
+            if status.get_backoff_remaining():
+                in_backoff += 1
 
         return {
             "total": len(self.instances),
             "closed": closed,
             "open": open_count,
             "half_open": half_open,
-            "instances": [
-                {
-                    "url": status.url,
-                    "state": status.state.value,
-                    "failure_count": status.failure_count,
-                    "last_failure": status.last_failure,
-                    "last_success": status.last_success,
-                }
-                for status in self.instances.values()
-            ],
+            "in_backoff": in_backoff,
+            "available": len(self.instances) - open_count - in_backoff,
+            "instances": [status.to_dict() for status in self.instances.values()],
         }
 
-    def reset_circuit(self, url: Optional[str] = None) -> None:
-        """Reset circuit breaker for an instance or all instances.
-
+    def reset_instance(self, url: Optional[str] = None) -> dict:
+        """Reset instance state.
+        
         Args:
             url: Specific instance URL to reset, or None to reset all.
+            
+        Returns:
+            Summary of reset action.
         """
         if url:
             if url in self.instances:
-                self.instances[url].state = CircuitState.CLOSED
-                self.instances[url].failure_count = 0
-                self.instances[url].circuit_open_at = None
-                logger.info(f"Reset circuit for {url}")
+                self.instances[url].reset()
+                self._mark_dirty()
+                self.save_state()
+                return {"reset": [url], "message": f"Reset {url}"}
+            return {"reset": [], "message": f"Unknown instance: {url}"}
         else:
+            count = len(self.instances)
             for status in self.instances.values():
-                status.state = CircuitState.CLOSED
-                status.failure_count = 0
-                status.circuit_open_at = None
-            logger.info("Reset all circuits")
+                status.reset()
+            self._mark_dirty()
+            self.save_state()
+            return {"reset": list(self.instances.keys()), "message": f"Reset all {count} instances"}
+
+    def get_available_instances(self) -> list[dict]:
+        """Get list of currently available instances.
+        
+        Returns:
+            List of available instance info.
+        """
+        available = []
+        for url, status in self.instances.items():
+            if status.is_available():
+                available.append({
+                    "url": url,
+                    "state": status.state.value,
+                    "failure_count": status.failure_count,
+                })
+        return available
