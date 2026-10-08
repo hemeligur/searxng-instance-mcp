@@ -311,12 +311,24 @@ FALLBACK_INSTANCES = [
 
 ---
 
+## Manutenção (2025-10-07)
+
+### CHANGELOG.md Atualizado
+- Adicionada versão **0.2.0** com todas as mudanças do PR #5
+- Documentadas: rate limiting detection, env vars, debug tools, state persistence
+- Atualizado count de testes: 27 → 57
+- Adicionadas dependências corretas (httpx>=0.27.0, pydantic>=2.0.0)
+
+---
+
 ## Status Atual
 ✅ **PRODUTO PRONTO** - MCP funcionando globalmente no Pi
 ✅ **Issue #4 CORRIGIDO** - Rate limiting detectado + backoff exponencial + persistência
 ✅ **CFG-001 IMPLEMENTADO** - Configuração via env vars (disabled instances + debug tools)
 ✅ **CFG-002 IMPLEMENTADO** - Discovery dinâmico corrigido (API searx.space + GitHub fallback)
-⚠️ **Issue #3 ABERTO** - results_limit não funciona (comportamento esperado da API)
+📋 **Issue #3 ABERTO** - results_limit não funciona (comportamento esperado da API)
+  - **Solução draft criada**: EPD-001 - Search Results Cache (`docs/EPD-001-search-results-cache.md`)
+  - Aguardando aprovação para implementação
 
 ## Estrutura do Projeto (v0.2.0)
 
