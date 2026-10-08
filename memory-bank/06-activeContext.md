@@ -146,6 +146,31 @@ SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
 
 ---
 
+## RFC-001 - Sistema de Tiering por Qualidade (2025-10-07)
+
+### Proposta
+Implementar sistema de pontuação para classificar instâncias em **3 tiers**:
+
+| Tier | Score | Nome | Estratégia |
+|------|-------|------|------------|
+| T1 | ≥ 0.75 | Premium | Prioridade máxima |
+| T2 | 0.40-0.74 | Standard | Fallback |
+| T3 | < 0.40 | Risky | Último recurso |
+
+### Fórmula do Score
+```
+score = (success_rate × 0.4) + (recency_bonus × 0.3) + 
+        (circuit_score × 0.2) + (failure_penalty × 0.1)
+```
+
+### Localização
+- `docs/rfc/001-instance-quality-tiers.md`
+
+### Status
+📋 **Documentado** - Aguardando implementação futura
+
+---
+
 ## CFG-002 - Discovery Dinâmico Corrigido (2025-10-07)
 
 ### Problema
