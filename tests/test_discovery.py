@@ -55,19 +55,20 @@ async def test_discover_instances_api_success(
 @pytest.mark.asyncio
 async def test_discover_instances_filters_by_uptime(mock_httpx_client):
     """Test that instances with low uptime are filtered out."""
+    # New format: URL is the key, data is in the value, uptime is at root level
     response_data = {
         "instances": {
-            "high-uptime": {
-                "name": "high-uptime",
-                "url": "https://high-uptime.example.com",
-                "network": {"uptime": 99, "tls_rank": "A+"},
-                "engines": ["google", "bing", "duckduckgo"],
+            "https://high-uptime.example.com": {
+                "uptime": {"uptimeDay": 99.0},
+                "tls": {"grade": "A+"},
+                "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
+                "alternativeUrls": {},
             },
-            "low-uptime": {
-                "name": "low-uptime",
-                "url": "https://low-uptime.example.com",
-                "network": {"uptime": 50, "tls_rank": "A+"},
-                "engines": ["google", "bing", "duckduckgo"],
+            "https://low-uptime.example.com": {
+                "uptime": {"uptimeDay": 50.0},
+                "tls": {"grade": "A+"},
+                "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
+                "alternativeUrls": {},
             },
         }
     }
@@ -88,17 +89,17 @@ async def test_discover_instances_filters_by_tls_rank(mock_httpx_client):
     """Test that instances with poor TLS rank are filtered out."""
     response_data = {
         "instances": {
-            "good-tls": {
-                "name": "good-tls",
-                "url": "https://good-tls.example.com",
-                "network": {"uptime": 99, "tls_rank": "A+"},
-                "engines": ["google", "bing", "duckduckgo"],
+            "https://good-tls.example.com": {
+                "uptime": {"uptimeDay": 99.0},
+                "tls": {"grade": "A+"},
+                "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
+                "alternativeUrls": {},
             },
-            "bad-tls": {
-                "name": "bad-tls",
-                "url": "https://bad-tls.example.com",
-                "network": {"uptime": 99, "tls_rank": "C"},
-                "engines": ["google", "bing", "duckduckgo"],
+            "https://bad-tls.example.com": {
+                "uptime": {"uptimeDay": 99.0},
+                "tls": {"grade": "C"},
+                "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
+                "alternativeUrls": {},
             },
         }
     }
@@ -119,17 +120,17 @@ async def test_discover_instances_filters_missing_engines(mock_httpx_client):
     """Test that instances missing required engines are filtered out."""
     response_data = {
         "instances": {
-            "complete": {
-                "name": "complete",
-                "url": "https://complete.example.com",
-                "network": {"uptime": 99, "tls_rank": "A+"},
-                "engines": ["google", "bing", "duckduckgo"],
+            "https://complete.example.com": {
+                "uptime": {"uptimeDay": 99.0},
+                "tls": {"grade": "A+"},
+                "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
+                "alternativeUrls": {},
             },
-            "missing-engine": {
-                "name": "missing-engine",
-                "url": "https://missing-engine.example.com",
-                "network": {"uptime": 99, "tls_rank": "A+"},
-                "engines": ["google"],  # Missing bing and duckduckgo
+            "https://missing-engine.example.com": {
+                "uptime": {"uptimeDay": 99.0},
+                "tls": {"grade": "A+"},
+                "engines": {"google": {}},  # Missing bing and duckduckgo
+                "alternativeUrls": {},
             },
         }
     }
@@ -157,6 +158,53 @@ async def test_discover_instances_api_failure_uses_fallback(mock_httpx_client):
     assert isinstance(instances, list)
     assert len(instances) > 0
     assert instances == FALLBACK_INSTANCES
+
+
+@pytest.mark.asyncio
+async def test_discover_instances_github_fallback(mock_httpx_client):
+    """Test that GitHub active instances are used as fallback."""
+    # First call (searx.space) raises HTTPError
+    async def raise_error(*args, **kwargs):
+        raise httpx.HTTPError("searx.space error")
+
+    mock_httpx_client.get.side_effect = raise_error
+
+    # Now patch the GitHub fallback function directly
+    from searxng_mcp import discovery
+
+    original_github = discovery._fetch_github_active_instances
+
+    async def mock_github():
+        return [
+            "https://github-instance-1.example.com",
+            "https://github-instance-2.example.com",
+        ]
+
+    discovery._fetch_github_active_instances = mock_github
+
+    try:
+        instances = await discover_instances(use_cache=False)
+
+        assert len(instances) == 2
+        assert "https://github-instance-1.example.com" in instances
+        assert "https://github-instance-2.example.com" in instances
+    finally:
+        discovery._fetch_github_active_instances = original_github
+
+
+def test_fallback_instances_count():
+    """Test that fallback instances list has at least 10 instances."""
+    instances = get_fallback_instances()
+
+    assert len(instances) >= 10, f"Expected >= 10 fallback instances, got {len(instances)}"
+
+
+def test_fallback_instances_all_valid():
+    """Test that all fallback instances are valid URLs."""
+    instances = get_fallback_instances()
+
+    for url in instances:
+        assert url.startswith("https://"), f"Invalid URL format: {url}"
 
 
 def test_get_fallback_instances():

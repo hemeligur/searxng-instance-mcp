@@ -55,7 +55,11 @@ GET https://<instancia>/search
 |-----------|-----------|---------|
 | `q` | Query de busca | `q=python+tutorial` |
 | `format` | Formato da resposta | `format=json` |
-| `limit` | Número de resultados | `limit=10` |
+| `lang` | Idioma | `lang=pt-BR` |
+| `pageno` | Número da página | `pageno=1` |
+| `safesearch` | Filtro safe search (0-2) | `safesearch=0` |
+
+**Nota**: O parâmetro `limit` **não é suportado** pela API do SearXNG. O número de resultados é fixo (~10 por página). Referência: https://docs.searxng.org/dev/search_api.html
 | `lang` | Idioma | `lang=pt-BR` |
 
 ### Exemplo de Requisição
@@ -84,6 +88,10 @@ curl "https://sx.xo.st/search?q=python&format=json&limit=5"
 | `SEARXNG_INSTANCES` | (API searx.space) | Lista de instâncias separada por vírgulas |
 | `SEARXNG_CACHE_TTL` | 3600 | TTL do cache em segundos |
 | `SEARXNG_TIMEOUT` | 10 | Timeout por requisição (s) |
+| `SEARXNG_DISABLED_INSTANCES` | (vazio) | URLs de instâncias a desabilitar (separadas por vírgula) |
+| `SEARXNG_DEBUG_TOOLS` | false | Habilita tools de debug (get_instances_status, reset_instance, get_available_instances) |
+| `SEARXNG_BACKOFF_BASE` | 60 | Backoff base em segundos |
+| `SEARXNG_BACKOFF_MAX` | 900 | Backoff máximo em segundos (15 min) |
 
 ## Ferramenta MCP Exposta
 

@@ -109,9 +109,18 @@ Domain data models.
 | `SearchResponse` | Complete search response |
 | `DiscoveredInstance` | Instance from searx.space |
 
-### 5. Constants (`constants.py`)
+### 5. Persistence (`persistence.py`)
 
-Centralized project configuration.
+Handles saving and loading instance state to disk.
+
+**Responsibilities:**
+- Save circuit breaker and backoff state to `~/.cache/searxng-mcp/instance_state.json`
+- Load state on startup
+- Filter out disabled instances (not persisted)
+
+### 6. Constants (`constants.py`)
+
+Centralized project configuration including environment variable helpers.
 
 ## Execution Flow
 
@@ -275,4 +284,8 @@ GET https://<instance>/search
 |----------|---------|-------------|
 | `SEARXNG_CACHE_TTL` | 3600 | Cache TTL in seconds |
 | `SEARXNG_TIMEOUT` | 10 | Request timeout (s) |
-| `SEARXNG_INSTANCES` | (API) | Instance list (not currently used) |
+| `SEARXNG_INSTANCES` | (API) | Instance list (comma-separated) |
+| `SEARXNG_DISABLED_INSTANCES` | (empty) | Instances to permanently disable |
+| `SEARXNG_DEBUG_TOOLS` | false | Enable debug tools (get_instances_status, reset_instance, get_available_instances) |
+| `SEARXNG_BACKOFF_BASE` | 60 | Backoff base in seconds |
+| `SEARXNG_BACKOFF_MAX` | 900 | Backoff max in seconds (15 min) |

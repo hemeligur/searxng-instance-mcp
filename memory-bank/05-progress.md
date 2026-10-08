@@ -117,3 +117,18 @@
 - **Solução**: Corrigido para `GNU General Public License v3 (GPLv3)` (formato oficial Trove)
 - **Arquivo**: `pyproject.toml`
 - **Build**: Verificada com sucesso (`uv build`)
+
+### 2025-10-07 (CFG-001 - Config via Env Vars)
+- **Tarefa**: Configuração via environment variables para instâncias desabilitadas e tools de debug
+- **Entregáveis implementados**:
+  - `SEARXNG_DISABLED_INSTANCES` - URLs separadas por vírgula
+  - `SEARXNG_DEBUG_TOOLS` - true/false para tools de status
+  - `SEARXNG_BACKOFF_BASE` e `SEARXNG_BACKOFF_MAX` - configuração de backoff
+- **Arquivos alterados**:
+  - `constants.py` - helpers: `get_disabled_instances()`, `is_debug_enabled()`, etc.
+  - `models.py` - campo `disabled` no `InstanceStatus`
+  - `server.py` - registro condicional de debug tools
+  - `manager.py` - filtragem de instâncias desabilitadas
+  - `persistence.py` - não persiste instâncias desabilitadas
+- **Testes**: 19 novos testes em `tests/test_config.py`
+- **Testes totais**: 57 passando ✅

@@ -74,35 +74,26 @@ def sample_search_response() -> dict:
 
 @pytest.fixture
 def sample_instances_api_response() -> dict:
-    """Sample response from searx.space API."""
+    """Sample response from searx.space API (new format with URL as key)."""
     return {
         "instances": {
-            "sx.xo.st": {
-                "name": "sx.xo.st",
-                "url": "https://sx.xo.st",
-                "network": {
-                    "uptime": 100,
-                    "tls_rank": "A+",
-                },
-                "engines": ["google", "bing", "duckduckgo"],
+            "https://sx.xo.st": {
+                "uptime": {"uptimeDay": 100.0},
+                "tls": {"grade": "A+"},
+                "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
+                "alternativeUrls": {},
             },
-            "search.ctq.ro": {
-                "name": "search.ctq.ro",
-                "url": "https://search.ctq.ro",
-                "network": {
-                    "uptime": 100,
-                    "tls_rank": "A+",
-                },
-                "engines": ["google", "bing", "duckduckgo"],
+            "https://search.ctq.ro": {
+                "uptime": {"uptimeDay": 100.0},
+                "tls": {"grade": "A+"},
+                "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
+                "alternativeUrls": {},
             },
-            "xka.cz": {
-                "name": "xka.cz",
-                "url": "https://xka.cz",
-                "network": {
-                    "uptime": 95,
-                    "tls_rank": "A+",
-                },
-                "engines": ["google", "bing", "duckduckgo"],
+            "https://xka.cz": {
+                "uptime": {"uptimeDay": 95.0},
+                "tls": {"grade": "A+"},
+                "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
+                "alternativeUrls": {},
             },
         }
     }

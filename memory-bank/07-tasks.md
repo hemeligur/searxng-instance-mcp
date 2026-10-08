@@ -8,11 +8,12 @@ Este arquivo contém apenas tarefas pendentes. Tarefas concluídas foram movidas
 
 ## Tarefas Pendentes
 
-Nenhuma tarefa pendente no momento. Projeto completo!
+*(nenhuma tarefa pendente)*
 
 ---
 
 ## Notas
 
-- Todas as tarefas do backlog foram concluídas.
+- Tarefas concluídas foram movidas para `08-completedTasks.md`.
+- CFG-001: ✅ Implementada - Configuração via env vars
 - Para histórico completo, consulte `08-completedTasks.md`.

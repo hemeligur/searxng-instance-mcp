@@ -129,6 +129,10 @@ mcp__searxng_web_search__web_search({query: "python programming", results_limit:
 | `SEARXNG_CACHE_TTL` | `3600` | TTL do cache em segundos (1 hora) |
 | `SEARXNG_TIMEOUT` | `10` | Timeout da requisição em segundos |
 | `SEARXNG_INSTANCES` | (auto-discovered) | Lista de instâncias separada por vírgulas |
+| `SEARXNG_DISABLED_INSTANCES` | (vazio) | URLs de instâncias a desabilitar permanentemente |
+| `SEARXNG_DEBUG_TOOLS` | `false` | Habilita tools de debug (status, reset, available) |
+| `SEARXNG_BACKOFF_BASE` | `60` | Backoff base em segundos |
+| `SEARXNG_BACKOFF_MAX` | `900` | Backoff máximo em segundos |
 
 ### Exemplos
 
@@ -141,6 +145,37 @@ SEARXNG_TIMEOUT=30 uv run python -m searxng_mcp
 
 # Instâncias específicas (opcional)
 SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m searxng_mcp
+
+# Desabilitar instâncias com problemas (anti-bot, etc)
+SEARXNG_DISABLED_INSTANCES="https://search.ctq.ro" uv run python -m searxng_mcp
+
+# Habilitar tools de debug
+SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
+```
+
+### Exemplo: Configuração Completa via Pi
+
+```json
+{
+  "mcpServers": {
+    "searxng-web-search": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/caminho/para/searxng-instance-mcp",
+        "run",
+        "python",
+        "-m",
+        "searxng_mcp"
+      ],
+      "env": {
+        "SEARXNG_DISABLED_INSTANCES": "https://search.ctq.ro,https://bad-instance.com",
+        "SEARXNG_DEBUG_TOOLS": "false",
+        "SEARXNG_CACHE_TTL": "3600"
+      }
+    }
+  }
+}
 ```
 
 ---
@@ -184,8 +219,9 @@ SEARXNG_INSTANCES="https://sx.xo.st,https://search.ctq.ro" uv run python -m sear
 | Server | `server.py` | Interface MCP (FastMCP) |
 | Manager | `manager.py` | Pool de instâncias + Circuit Breaker |
 | Discovery | `discovery.py` | Busca e filtra instâncias do searx.space |
+| Persistence | `persistence.py` | Salva/carrega estado em disco |
 | Models | `models.py` | Tipos de dados |
-| Constants | `constants.py` | Configurações |
+| Constants | `constants.py` | Configurações (inclui env vars) |
 
 ---
 
@@ -285,7 +321,7 @@ searxng-instance-mcp/
 │   ├── discovery.py         # Instance discovery (searx.space)
 │   ├── models.py            # Data models
 │   └── constants.py         # Configuration
-├── tests/                   # 27 testes pytest
+├── tests/                   # 57 testes pytest
 ├── docs/
 │   ├── usuario/             # Documentação para usuários
 │   ├── developer/           # Documentação para desenvolvedores

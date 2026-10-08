@@ -16,7 +16,10 @@
 
 """Instance discovery for SearXNG MCP server.
 
-Discovers and caches available SearXNG instances from searx.space.
+Discovers and caches available SearXNG instances from multiple sources:
+1. searx.space/data/instances.json (primary API)
+2. GitHub active instances (pre-verified JSON-supporting instances)
+3. Hardcoded fallback list (always available)
 """
 
 import json
@@ -32,14 +35,31 @@ from .models import DiscoveredInstance
 logger = logging.getLogger(__name__)
 
 # Configuration
-SEARX_SPACE_API = "https://searx.space/api/v1/instances"
+SEARX_SPACE_API = "https://searx.space/data/instances.json"
+GITHUB_ACTIVE_INSTANCES_URL = (
+    "https://raw.githubusercontent.com/purujawa06-bot/SearXNG-active-instance/main/active.json"
+)
 DEFAULT_CACHE_TTL = int(os.environ.get("SEARXNG_CACHE_TTL", "3600"))  # 1 hour default
 
 # Fallback instances (hardcoded reliable instances)
+# Expanded list with verified instances from searx.space and similar projects
 FALLBACK_INSTANCES = [
+    # Primary reliable instances
     "https://sx.xo.st",
     "https://search.ctq.ro",
-    "https://xka.cz",
+    "https://www.isci.si",
+    # Additional instances from searx.space (TLS A+, 100% uptime)
+    "https://searx.ononoki.org",
+    "https://search.femboy.ad",
+    "https://searx.tiekoetter.com",
+    "https://baresearch.org",
+    "https://search.yuri.llc",
+    "https://search.lumy.live",
+    # Instances from similar MCP projects
+    "https://metacat.online",
+    "https://search.080609.xyz",
+    "https://search.canine.tools",
+    "https://search.indst.eu",
 ]
 
 # Cache paths
@@ -126,15 +146,16 @@ async def _fetch_instances_from_api() -> list[str]:
         data = response.json()
 
     # Parse instances from API response
+    # New format: instances is a dict with URLs as keys
     instances_data = data.get("instances", {})
     discovered: list[DiscoveredInstance] = []
 
-    for instance_data in instances_data.values():
+    for url, instance_data in instances_data.items():
         try:
-            instance = DiscoveredInstance.from_api_response(instance_data)
+            instance = DiscoveredInstance.from_api_response(url, instance_data)
             discovered.append(instance)
         except Exception as e:
-            logger.debug(f"Failed to parse instance: {e}")
+            logger.debug(f"Failed to parse instance {url}: {e}")
             continue
 
     # Filter instances by quality criteria
@@ -149,10 +170,11 @@ async def _fetch_instances_from_api() -> list[str]:
         if instance.tls_rank not in VALID_TLS_RANKS:
             continue
 
-        # Check required engines
-        instance_engines = set(engine.lower() for engine in instance.engines)
-        if not REQUIRED_ENGINES.issubset(instance_engines):
-            continue
+        # Check required engines (if engines list is available)
+        if instance.engines:
+            instance_engines = set(engine.lower() for engine in instance.engines)
+            if not REQUIRED_ENGINES.issubset(instance_engines):
+                continue
 
         # Instance passes all filters
         filtered_instances.append(instance)
@@ -164,17 +186,51 @@ async def _fetch_instances_from_api() -> list[str]:
     # Extract URLs
     instance_urls = [inst.url for inst in filtered_instances]
 
-    logger.info(f"Discovered {len(instance_urls)} healthy instances from API")
+    logger.info(f"Discovered {len(instance_urls)} healthy instances from searx.space API")
 
     return instance_urls
+
+
+async def _fetch_github_active_instances() -> list[str]:
+    """Fetch pre-verified active instances from GitHub.
+
+    This source provides instances that have been verified to support JSON search
+    and return valid results (HTTP 200, no 403/429).
+
+    Returns:
+        List of instance URLs that support JSON search.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(GITHUB_ACTIVE_INSTANCES_URL)
+            response.raise_for_status()
+
+            data = response.json()
+
+        instances = data.get("instances", [])
+        urls = [inst["url"] for inst in instances]
+
+        logger.info(f"Found {len(urls)} verified active instances from GitHub")
+        return urls
+
+    except httpx.HTTPError as e:
+        logger.warning(f"Failed to fetch GitHub active instances: {e}")
+        return []
+    except Exception as e:
+        logger.warning(f"Error parsing GitHub active instances: {e}")
+        return []
 
 
 async def discover_instances(use_cache: bool = True) -> list[str]:
     """Discover available SearXNG instances.
 
-    Attempts to fetch instances from the searx.space API and filters them
-    by quality criteria (uptime > 95%, TLS rank A+ or A, required engines).
-    Results are cached locally.
+    Attempts to fetch instances from multiple sources in order:
+    1. Local cache (if valid)
+    2. searx.space/data/instances.json API
+    3. GitHub active instances (pre-verified JSON-supporting instances)
+    4. Hardcoded fallback instances
+
+    Results are cached locally for performance.
 
     Args:
         use_cache: Whether to use cached instances if available. Defaults to True.
@@ -188,20 +244,30 @@ async def discover_instances(use_cache: bool = True) -> list[str]:
         if cached is not None:
             return cached
 
-    # Fetch from API
+    # Strategy 1: Fetch from searx.space API
     try:
         instances = await _fetch_instances_from_api()
-        _save_instances_to_cache(instances)
-        return instances
-
+        if instances:
+            _save_instances_to_cache(instances)
+            return instances
     except httpx.HTTPError as e:
-        logger.warning(f"Failed to fetch instances from API: {e}")
-
+        logger.warning(f"Failed to fetch instances from searx.space API: {e}")
     except Exception as e:
-        logger.error(f"Unexpected error fetching instances: {e}")
+        logger.warning(f"Unexpected error from searx.space API: {e}")
 
-    # Fallback to hardcoded instances
-    logger.info("Using fallback instances")
+    # Strategy 2: Fetch from GitHub active instances (pre-verified)
+    try:
+        instances = await _fetch_github_active_instances()
+        if instances:
+            _save_instances_to_cache(instances)
+            return instances
+    except httpx.HTTPError as e:
+        logger.warning(f"Failed to fetch GitHub active instances: {e}")
+    except Exception as e:
+        logger.warning(f"Unexpected error from GitHub: {e}")
+
+    # Strategy 3: Fallback to hardcoded instances
+    logger.info("Using fallback instances (all discovery sources failed)")
     return list(FALLBACK_INSTANCES)
 
 
