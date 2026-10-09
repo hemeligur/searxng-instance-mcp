@@ -243,6 +243,46 @@ async def test_search_with_limit(clean_manager):
 
 
 @pytest.mark.asyncio
+async def test_search_limit_filters_results(clean_manager):
+    """Test that limit parameter filters results client-side (API doesn't support limit)."""
+    manager = clean_manager
+    
+    # Add test instance
+    test_url = "https://test.example.com"
+    manager.instances[test_url] = InstanceStatus(url=test_url)
+
+    # API returns 10 results (SearXNG always returns ~10)
+    ten_results = {
+        "results": [
+            {"url": f"https://example{i}.com", "title": f"Result {i}", "content": f"Content {i}", "engine": "google", "category": "general"}
+            for i in range(10)
+        ]
+    }
+
+    mock_response = MagicMock(spec=httpx.Response)
+    mock_response.status_code = 200
+    mock_response.json.return_value = ten_results
+
+    with patch("httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client.get.return_value = mock_response
+        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value.__aexit__.return_value = None
+
+        # Request with limit=3, but API returns 10
+        result = await manager.search("test", limit=3)
+
+        assert result.success is True
+        assert result.count == 3, f"Expected 3 results, got {result.count}"
+        assert len(result.results) == 3, f"Expected 3 results in list, got {len(result.results)}"
+        
+        # Verify we got the first 3 results
+        assert result.results[0].title == "Result 0"
+        assert result.results[1].title == "Result 1"
+        assert result.results[2].title == "Result 2"
+
+
+@pytest.mark.asyncio
 async def test_circuit_open_after_failures(clean_manager):
     """Test that circuit opens after consecutive failures."""
     manager = clean_manager

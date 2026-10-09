@@ -60,6 +60,8 @@ GET https://<instancia>/search
 | `safesearch` | Filtro safe search (0-2) | `safesearch=0` |
 
 **Nota**: O parâmetro `limit` **não é suportado** pela API do SearXNG. O número de resultados é fixo (~10 por página). Referência: https://docs.searxng.org/dev/search_api.html
+
+**Solução Implementada**: O MCP filtra os resultados no lado do cliente após recebê-los da API. Para evitar desperdício, considere implementar o cache de resultados conforme [EPD-001](./docs/epd/EPD-001-search-results-cache.md).
 | `lang` | Idioma | `lang=pt-BR` |
 
 ### Exemplo de Requisição

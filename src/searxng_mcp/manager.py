@@ -349,10 +349,11 @@ class SearXNGManager:
         """
         # Build search URL
         search_url = f"{url.rstrip('/')}/search"
+        # Note: SearXNG API does not support 'limit' parameter
+        # Results are filtered client-side after receiving ~10 results
         params = {
             "q": query,
             "format": "json",
-            "limit": limit,
         }
 
         async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
@@ -406,6 +407,9 @@ class SearXNGManager:
                 category=item.get("category", "general"),
             )
             results.append(result)
+
+        # Limit results client-side (API doesn't support 'limit' parameter)
+        results = results[:limit]
 
         # Detect implicit rate limiting: HTTP 200 with empty results
         # SearXNG returns empty results when rate limited instead of HTTP 429

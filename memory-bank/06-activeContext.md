@@ -1,5 +1,13 @@
 # Active Context
 
+## Glossário de Siglas
+
+| Sigla | Significado | Descrição |
+|-------|-------------|-----------|
+| **EPD** | Enhancement Proposal Document | Documento de proposta de melhoria. Segue o mesmo padrão de RFCs, mas com nomenclatura mais descritiva. Um EPD propõe uma nova feature ou melhoria significativa para o projeto. |
+
+---
+
 ## Melhoria da Documentação (2025-10-06)
 
 ### Problema Identificado
@@ -164,7 +172,7 @@ score = (success_rate × 0.4) + (recency_bonus × 0.3) +
 ```
 
 ### Localização
-- `docs/rfc/001-instance-quality-tiers.md`
+- `docs/epd/EPD-002-instance-quality-tiers.md`
 
 ### Status
 📋 **Documentado** - Aguardando implementação futura

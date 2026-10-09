@@ -85,6 +85,8 @@ mcp__searxng_web_search__web_search({query: "python programming", results_limit:
 | `query` | string | obrigatório | Termo de busca |
 | `results_limit` | number | 10 | Número máximo de resultados (1-50) |
 
+> **Nota sobre `results_limit`**: A API do SearXNG não suporta um parâmetro de limite. O MCP filtra os resultados no lado do cliente, retornando apenas os primeiros N resultados após receber ~10 da API. Para evitar desperdício de requisições, considere usar o cache de resultados (veja [EPD-001](./docs/epd/EPD-001-search-results-cache.md)).
+
 ### Exemplo de Resposta
 
 ```json
