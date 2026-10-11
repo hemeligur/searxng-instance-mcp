@@ -159,8 +159,12 @@ def get_global_timeout() -> int:
     
     Returns:
         Global timeout in seconds (default: 60).
+        Returns default (60) if value is negative or invalid.
     """
     try:
-        return int(os.environ.get("SEARXNG_GLOBAL_TIMEOUT", "60"))
+        value = int(os.environ.get("SEARXNG_GLOBAL_TIMEOUT", "60"))
+        if value < 0:
+            return 60  # Reject negative values
+        return value
     except ValueError:
         return 60  # Default on invalid value

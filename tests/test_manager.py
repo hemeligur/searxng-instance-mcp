@@ -622,14 +622,14 @@ async def test_reset_specific_instance(clean_manager):
 
 
 @pytest.mark.asyncio
-async def test_global_timeout_stops_search(clean_manager, monkeypatch):
+async def test_global_timeout_stops_search(clean_manager, mock_global_timeout):
     """Test that global timeout stops search after configured time."""
     import time
     
     manager = clean_manager
     
-    # Set global timeout to 1 second
-    monkeypatch.setattr("searxng_mcp.manager.get_global_timeout", lambda: 1)
+    # Set global timeout to 1 second using safe fixture
+    mock_global_timeout(1)
     
     # Add many failing instances
     for i in range(10):

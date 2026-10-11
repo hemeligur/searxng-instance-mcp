@@ -266,3 +266,25 @@ class TestGlobalTimeoutConfig:
             
             # Should fallback to default (60)
             assert get_global_timeout() == 60
+
+    def test_global_timeout_negative_value_uses_default(self):
+        """Test that negative timeout value uses default."""
+        with patch.dict(os.environ, {"SEARXNG_GLOBAL_TIMEOUT": "-1"}):
+            import importlib
+            import searxng_mcp.constants
+            importlib.reload(searxng_mcp.constants)
+            from searxng_mcp.constants import get_global_timeout
+            
+            # Should fallback to default (60) for negative values
+            assert get_global_timeout() == 60
+
+    def test_global_timeout_zero_value_is_valid(self):
+        """Test that zero timeout value is accepted (disables timeout)."""
+        with patch.dict(os.environ, {"SEARXNG_GLOBAL_TIMEOUT": "0"}):
+            import importlib
+            import searxng_mcp.constants
+            importlib.reload(searxng_mcp.constants)
+            from searxng_mcp.constants import get_global_timeout
+            
+            # Zero should be allowed (disables global timeout)
+            assert get_global_timeout() == 0
