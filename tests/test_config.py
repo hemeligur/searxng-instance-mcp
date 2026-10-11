@@ -225,3 +225,44 @@ class TestManagerDisabledInstances:
             
             assert manager.instances["https://fallback1.com"].disabled is True
             assert manager.instances["https://fallback1.com"].is_available() is False
+
+
+class TestGlobalTimeoutConfig:
+    """Tests for SEARXNG_GLOBAL_TIMEOUT env var."""
+
+    def test_global_timeout_default(self):
+        """Test that default global timeout is 60 seconds."""
+        # Clear any env var
+        env_backup = os.environ.pop("SEARXNG_GLOBAL_TIMEOUT", None)
+        try:
+            # Re-import to get fresh value
+            import importlib
+            import searxng_mcp.constants
+            importlib.reload(searxng_mcp.constants)
+            from searxng_mcp.constants import get_global_timeout
+            
+            assert get_global_timeout() == 60
+        finally:
+            if env_backup:
+                os.environ["SEARXNG_GLOBAL_TIMEOUT"] = env_backup
+
+    def test_global_timeout_from_env(self):
+        """Test that global timeout can be set via env var."""
+        with patch.dict(os.environ, {"SEARXNG_GLOBAL_TIMEOUT": "30"}):
+            import importlib
+            import searxng_mcp.constants
+            importlib.reload(searxng_mcp.constants)
+            from searxng_mcp.constants import get_global_timeout
+            
+            assert get_global_timeout() == 30
+
+    def test_global_timeout_invalid_value_uses_default(self):
+        """Test that invalid timeout value uses default."""
+        with patch.dict(os.environ, {"SEARXNG_GLOBAL_TIMEOUT": "invalid"}):
+            import importlib
+            import searxng_mcp.constants
+            importlib.reload(searxng_mcp.constants)
+            from searxng_mcp.constants import get_global_timeout
+            
+            # Should fallback to default (60)
+            assert get_global_timeout() == 60

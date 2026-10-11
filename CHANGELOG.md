@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Global timeout** (`SEARXNG_GLOBAL_TIMEOUT`): Prevents searches from taking too long when many instances are failing. Default: 60 seconds. Fixes timeout issues when trying many slow/unresponsive instances.
+
 ### Fixed
+- **Test isolation**: Tests no longer pollute production cache. The `clean_manager` fixture now mocks both `load_instance_states` and `save_instance_states` to prevent test data (e.g., `instance1.example.com`) from leaking into `~/.cache/searxng-mcp/instance_state.json`.
 - **Issue #3 - `results_limit` parameter**: The `results_limit` parameter is now properly respected. The SearXNG API does not support a `limit` parameter, so the MCP now filters results client-side after receiving ~10 results from the API. Added `test_search_limit_filters_results` test.
 
 ## [0.2.0] - 2025-10-07

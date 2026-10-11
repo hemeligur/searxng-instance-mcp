@@ -19,11 +19,12 @@
 import asyncio
 import logging
 import random
+import time
 from typing import Optional
 
 import httpx
 
-from .constants import DEFAULT_LIMIT, DEFAULT_TIMEOUT, get_disabled_instances, get_backoff_base, get_backoff_max
+from .constants import DEFAULT_LIMIT, DEFAULT_TIMEOUT, get_disabled_instances, get_backoff_base, get_backoff_max, get_global_timeout
 from .discovery import discover_instances, get_fallback_instances
 from .models import CircuitState, InstanceStatus, SearchResponse, SearchResult
 from .persistence import load_instance_states, save_instance_states
@@ -230,6 +231,9 @@ class SearXNGManager:
         - OPEN: After 3 failures, requests blocked until TTL expires
         - HALF_OPEN: After TTL, allows one test request
 
+        A global timeout (configurable via SEARXNG_GLOBAL_TIMEOUT env var, default 60s)
+        prevents the search from taking too long when many instances are failing.
+
         Args:
             query: The search query string.
             limit: Maximum number of results to return.
@@ -255,11 +259,21 @@ class SearXNGManager:
 
         query = query.strip()
 
+        # Get global timeout
+        global_timeout = get_global_timeout()
+        search_start_time = time.time()
+
         # Try each available instance
         errors: list[dict] = []
         skipped: list[str] = []
 
         for url, status in self.instances.items():
+            # Check global timeout
+            elapsed = time.time() - search_start_time
+            if elapsed >= global_timeout:
+                logger.warning(f"Global timeout reached ({global_timeout}s), stopping search")
+                break
+
             # Check availability (includes backoff check)
             if not status.is_available():
                 backoff_remaining = status.get_backoff_remaining()
@@ -310,8 +324,20 @@ class SearXNGManager:
                 self._update_instance_status(url, success=False, error=error_msg)
                 logger.error(f"Unexpected error on {url}: {e}")
 
-        # All instances failed
-        logger.error(f"All {len(errors)} instances failed for query: {query}")
+        # Check if we hit global timeout
+        elapsed = time.time() - search_start_time
+        hit_timeout = elapsed >= global_timeout
+        
+        # Build error message
+        if hit_timeout:
+            error_msg = f"Global timeout ({global_timeout}s)"
+            message = f"Search stopped after {elapsed:.1f}s (global timeout: {global_timeout}s). "
+            message += f"Tried {len(errors)} instances before timeout. "
+            message += f"{len(skipped)} instances skipped (backoff/circuit breaker)."
+        else:
+            error_msg = "All instances unavailable"
+            message = f"Failed to search using any available instance. "
+            message += f"{len(skipped)} instances skipped (backoff/circuit breaker)."
 
         # Check if any instance was rate limited
         any_rate_limited = any(
@@ -322,9 +348,8 @@ class SearXNGManager:
         response = SearchResponse(
             success=False,
             query=query,
-            error="All instances unavailable",
-            message=f"Failed to search using any available instance. "
-            f"{len(skipped)} instances skipped (backoff/circuit breaker).",
+            error=error_msg,
+            message=message,
             details=errors,
             rate_limited=any_rate_limited,
         )

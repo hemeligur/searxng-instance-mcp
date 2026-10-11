@@ -117,3 +117,17 @@ def temp_cache_dir(tmp_path, monkeypatch):
     monkeypatch.setattr("searxng_mcp.discovery.CACHE_DIR", cache_dir)
     monkeypatch.setattr("searxng_mcp.discovery.CACHE_FILE", cache_dir / "instances.json")
     return cache_dir
+
+
+@pytest.fixture
+def isolated_persistence(monkeypatch):
+    """Mock persistence functions to isolate tests from filesystem.
+    
+    This prevents test data from polluting the production cache
+    (e.g., instance1.example.com, instance2.example.com from tests
+    leaking into ~/.cache/searxng-mcp/instance_state.json).
+    """
+    # Mock both load and save to return empty data / do nothing
+    monkeypatch.setattr("searxng_mcp.manager.load_instance_states", lambda: {})
+    monkeypatch.setattr("searxng_mcp.manager.save_instance_states", lambda instances: True)
+    return True

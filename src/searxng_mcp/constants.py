@@ -149,3 +149,18 @@ def get_backoff_max() -> int:
         Backoff max in seconds (default: 900).
     """
     return int(os.environ.get("SEARXNG_BACKOFF_MAX", "900"))
+
+
+def get_global_timeout() -> int:
+    """Get global search timeout from SEARXNG_GLOBAL_TIMEOUT env var.
+    
+    This is the maximum time to wait for ANY search operation,
+    regardless of how many instances are tried.
+    
+    Returns:
+        Global timeout in seconds (default: 60).
+    """
+    try:
+        return int(os.environ.get("SEARXNG_GLOBAL_TIMEOUT", "60"))
+    except ValueError:
+        return 60  # Default on invalid value
