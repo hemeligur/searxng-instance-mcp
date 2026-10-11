@@ -17,6 +17,7 @@
 """Pytest configuration and fixtures for searxng-mcp tests."""
 
 import pytest
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 
@@ -117,3 +118,53 @@ def temp_cache_dir(tmp_path, monkeypatch):
     monkeypatch.setattr("searxng_mcp.discovery.CACHE_DIR", cache_dir)
     monkeypatch.setattr("searxng_mcp.discovery.CACHE_FILE", cache_dir / "instances.json")
     return cache_dir
+
+
+@pytest.fixture
+def isolated_persistence(monkeypatch):
+    """Mock persistence functions to isolate tests from filesystem.
+    
+    This prevents test data from polluting the production cache
+    (e.g., instance1.example.com, instance2.example.com from tests
+    leaking into ~/.cache/searxng-mcp/instance_state.json).
+    """
+    # Mock both load and save to return empty data / do nothing
+    monkeypatch.setattr("searxng_mcp.manager.load_instance_states", lambda: {})
+    monkeypatch.setattr("searxng_mcp.manager.save_instance_states", lambda instances: True)
+    return True
+
+
+@contextmanager
+def _mock_global_timeout_context(timeout_value: int):
+    """Context manager to safely mock get_global_timeout.
+    
+    This replaces the function in the manager module during the test
+    and ensures proper cleanup via monkeypatch mechanism.
+    """
+    import searxng_mcp.manager as manager_module
+    original = manager_module.get_global_timeout
+    manager_module.get_global_timeout = lambda: timeout_value
+    try:
+        yield
+    finally:
+        manager_module.get_global_timeout = original
+
+
+@pytest.fixture
+def mock_global_timeout(monkeypatch):
+    """Fixture to safely mock global timeout for a test.
+    
+    This fixture uses monkeypatch which automatically handles cleanup,
+    avoiding issues with parallel test execution.
+    
+    Usage:
+        async def test_something(mock_global_timeout):
+            mock_global_timeout(5)  # Set timeout to 5 seconds
+            # ... test code ...
+    """
+    import searxng_mcp.manager as manager_module
+    
+    def _set_timeout(value: int):
+        monkeypatch.setattr(manager_module, "get_global_timeout", lambda: value)
+    
+    return _set_timeout

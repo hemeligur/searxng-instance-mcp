@@ -16,6 +16,7 @@
 
 """Tests for SearXNG manager functionality."""
 
+import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
@@ -26,18 +27,25 @@ from searxng_mcp.models import CircuitState, InstanceStatus, SearchResponse
 
 @pytest.fixture
 def clean_manager():
-    """Create a clean manager instance for testing."""
+    """Create a clean manager instance for testing.
+    
+    This fixture ensures tests don't pollute the production cache:
+    - Mocks load_instance_states to return empty dict
+    - Mocks save_instance_states to do nothing
+    - Resets the singleton between tests
+    """
     # Reset singleton
     import searxng_mcp.manager as manager_module
     manager_module._manager_instance = None
     
-    # Mock persistence to not load saved state
+    # Mock BOTH load and save to prevent test pollution of production cache
     with patch("searxng_mcp.manager.load_instance_states", return_value={}):
-        manager = SearXNGManager()
-        # Clear any loaded instances
-        manager.instances.clear()
-        manager._initialized = True
-        yield manager
+        with patch("searxng_mcp.manager.save_instance_states", return_value=True):
+            manager = SearXNGManager()
+            # Clear any loaded instances
+            manager.instances.clear()
+            manager._initialized = True
+            yield manager
 
 
 @pytest.mark.asyncio
@@ -611,3 +619,66 @@ async def test_reset_specific_instance(clean_manager):
     assert manager.instances["https://instance1.example.com"].backoff_until is None
     # instance2 should be unchanged
     assert manager.instances["https://instance2.example.com"].failure_count == 0
+
+
+@pytest.mark.asyncio
+async def test_global_timeout_stops_search(clean_manager, mock_global_timeout):
+    """Test that global timeout stops search after configured time."""
+    import time
+    
+    manager = clean_manager
+    
+    # Set global timeout to 1 second using safe fixture
+    mock_global_timeout(1)
+    
+    # Add many failing instances
+    for i in range(10):
+        url = f"https://slow{i}.example.com"
+        manager.instances[url] = InstanceStatus(url=url)
+    
+    # Mock httpx to sleep longer than timeout
+    async def slow_get(*args, **kwargs):
+        await asyncio.sleep(2)  # Sleep longer than global timeout
+        response = MagicMock(spec=httpx.Response)
+        response.status_code = 200
+        response.json.return_value = {"results": []}
+        return response
+    
+    with patch("httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client.get.side_effect = slow_get
+        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value.__aexit__.return_value = None
+        
+        start = time.time()
+        result = await manager.search("test", limit=5)
+        elapsed = time.time() - start
+        
+        # Should stop due to global timeout, not try all 10 instances
+        assert result.success is False
+        assert "Global timeout" in result.error or "timeout" in result.error.lower()
+        # Should take close to 1 second, not 10+ seconds
+        assert elapsed < 3  # Allow some margin
+        assert elapsed >= 1  # Should wait at least the timeout
+
+
+@pytest.mark.asyncio
+async def test_global_timeout_default_is_60_seconds(clean_manager, monkeypatch):
+    """Test that default global timeout is 60 seconds."""
+    from searxng_mcp.constants import get_global_timeout
+    
+    # Default should be 60
+    assert get_global_timeout() == 60
+    
+    # Can be overridden via env var
+    monkeypatch.setenv("SEARXNG_GLOBAL_TIMEOUT", "30")
+    # Need to reimport to pick up the env change
+    import importlib
+    import searxng_mcp.constants
+    importlib.reload(searxng_mcp.constants)
+    from searxng_mcp.constants import get_global_timeout as get_timeout_30
+    assert get_timeout_30() == 30
+    
+    # Clean up
+    monkeypatch.delenv("SEARXNG_GLOBAL_TIMEOUT", raising=False)
+    importlib.reload(searxng_mcp.constants)

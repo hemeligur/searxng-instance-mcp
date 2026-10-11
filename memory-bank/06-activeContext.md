@@ -338,6 +338,79 @@ FALLBACK_INSTANCES = [
   - **Solução draft criada**: EPD-001 - Search Results Cache (`docs/EPD-001-search-results-cache.md`)
   - Aguardando aprovação para implementação
 
+---
+
+## Fix: Timeout e Test Isolation (2025-10-09)
+
+### Problema Identificado
+- **Timeout >1min** ao fazer `web_search` - causava frustração para usuários
+- **Cache poluído** - dados de teste (`instance1.example.com`, etc.) poluíram o cache de produção
+
+### Investigação
+1. **Timeout**: 22 instâncias disponíveis × 10s timeout = 220s worst case
+2. **Cache poluído**: Testes não mockavam `save_instance_states`, vazando dados para `~/.cache/searxng-mcp/instance_state.json`
+
+### Soluções Implementadas
+
+#### 1. Global Timeout (FIX-001)
+- Nova env var `SEARXNG_GLOBAL_TIMEOUT` (default: 60s)
+- Para busca após tempo total configurado
+- Previne waits excessivos quando muitas instâncias falham
+
+```python
+# manager.py - search()
+global_timeout = get_global_timeout()  # default 60s
+search_start_time = time.time()
+
+for url, status in self.instances.items():
+    elapsed = time.time() - search_start_time
+    if elapsed >= global_timeout:
+        break  # Para ao invés de tentar todas
+```
+
+#### 2. Test Isolation (FIX-002)
+- `clean_manager` fixture agora mocka `save_instance_states`
+- Fixture `isolated_persistence` adicionado em `conftest.py`
+- Testes não poluem mais o cache de produção
+
+```python
+@pytest.fixture
+def clean_manager():
+    with patch("searxng_mcp.manager.load_instance_states", return_value={}):
+        with patch("searxng_mcp.manager.save_instance_states", return_value=True):
+            manager = SearXNGManager()
+            yield manager
+```
+
+### Limpeza do Cache de Produção
+
+Para limpar o cache poluído:
+```bash
+rm ~/.cache/searxng-mcp/instance_state.json
+```
+
+Ou usar a função em código se disponível.
+
+### Testes Adicionados (66 total)
+- `test_global_timeout_stops_search`
+- `test_global_timeout_default_is_60_seconds`
+- `test_global_timeout_default`
+- `test_global_timeout_from_env`
+- `test_global_timeout_invalid_value_uses_default`
+
+### Arquivos Alterados
+| Arquivo | Mudança |
+|---------|---------|
+| `constants.py` | +`get_global_timeout()` |
+| `manager.py` | +global timeout check no loop de search |
+| `conftest.py` | +`isolated_persistence` fixture |
+| `test_manager.py` | +timeout tests, fixture isolado |
+| `test_config.py` | +timeout config tests |
+| `CHANGELOG.md` | Documentado |
+
+### Branch
+`fix/timeout-and-test-isolation`
+
 ## Estrutura do Projeto (v0.2.0)
 
 ```
