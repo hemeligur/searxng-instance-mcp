@@ -176,6 +176,58 @@ Tarefas concluídas do projeto, ordenadas por código.
 
 ---
 
+## Sistema de Tiering Híbrido (EPD-002)
+
+### TIER-001: Criar dataclass ExternalMetrics
+- **Data de Conclusão**: 2025-01-19
+- **Entregáveis**:
+  - `ExternalMetrics` dataclass em `models.py`
+  - Campos: `uptime_day`, `uptime_week`, `tls_grade`, `engine_count`, `error_load`, `error_check`, `network_country`, `last_updated`
+  - Métodos `to_dict()` e `from_dict()` para serialização
+- **Arquivos Alterados**: `src/searxng_mcp/models.py`
+- **Testes**: Verificados manualmente, 68 testes passando ✅
+
+### TIER-002: Estender DiscoveredInstance com novos campos da API
+- **Data de Conclusão**: 2025-01-19
+- **Entregáveis**:
+  - Campos adicionais: `error_load`, `error_check`, `network_country`, `network_region`, `uptime_week`
+  - Parser `from_api_response()` atualizado para extrair novos campos
+- **Arquivos Alterados**: `src/searxng_mcp/models.py`, `tests/conftest.py`
+- **Testes**: 68 testes passando ✅
+
+### TIER-003: Estender InstanceStatus com métricas internas
+- **Data de Conclusão**: 2025-01-19
+- **Entregáveis**:
+  - Campos: `total_requests`, `successful_requests`, `response_times_ms`
+  - Método `record_request(success, response_time_ms)`
+  - Property `success_rate` (retorna 0.5 se sem histórico)
+  - Campos internos `_external_metrics` e `_last_external_update`
+  - Métodos `to_dict()` e `from_dict()` atualizados com serialização completa
+- **Arquivos Alterados**: `src/searxng_mcp/models.py`
+- **Testes**: 68 testes passando ✅
+
+### TIER-004: Implementar cálculo de score híbrido (parcial)
+- **Data de Conclusão**: 2025-01-19
+- **Entregáveis**:
+  - `RECENCY_HALF_LIFE = 3600.0` segundos
+  - `_calculate_recency_bonus()` com decay exponencial (0.5 + 0.5 * decay)
+  - Property `circuit_score` (CLOSED=1.0, HALF_OPEN=0.5, OPEN=0.0)
+  - `calculate_tier_score()`: Score = 40% External + 60% Internal
+  - `get_tier()`: T1≥0.70, T2≥0.45, T3<0.45
+- **Pesos Implementados**:
+  - External: uptime(20%) + tls(15%) + engines(5%) = 40%
+  - Internal: success_rate(35%) + recency(15%) + circuit(10%) = 60%
+- **Scores de Referência**:
+  | Cenário | Score | Tier |
+  |---------|-------|------|
+  | Nova + TLS A+ + 100% uptime | ~0.75 | T1 |
+  | 4/4 requests + TLS A+ | ~1.00 | T1 |
+  | 10/10 requests (sem ext) | ~0.60 | T2 |
+  | TLS B + 10/10 | ~0.76 | T1 |
+- **Testes**: 68 testes passando ✅
+
+---
+
 ## Resumo de Entregas
 
 | Fase | Tarefas | Status |
@@ -188,4 +240,5 @@ Tarefas concluídas do projeto, ordenadas por código.
 | Fase 6: Documentação | T-050 | ✅ 1/1 |
 | Fase 7: Testes | T-060 a T-062 | ✅ 3/3 |
 | Melhorias Documentação | DOC-001 | ✅ 1/1 |
-| **Total** | **14 tarefas** | **✅ 14/14** |
+| Sistema Tiering | TIER-001 a TIER-004 | ✅ 4/4 |
+| **Total** | **18 tarefas** | **✅ 18/18** |

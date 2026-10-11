@@ -79,22 +79,31 @@ def sample_instances_api_response() -> dict:
     return {
         "instances": {
             "https://sx.xo.st": {
-                "uptime": {"uptimeDay": 100.0},
+                "uptime": {"uptimeDay": 100.0, "uptimeWeek": 99.8},
                 "tls": {"grade": "A+"},
                 "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
                 "alternativeUrls": {},
+                "error_load": 0.0,
+                "error_check": 0.0,
+                "network": {"country": "DE", "region": "Europe"},
             },
             "https://search.ctq.ro": {
-                "uptime": {"uptimeDay": 100.0},
+                "uptime": {"uptimeDay": 100.0, "uptimeWeek": 99.9},
                 "tls": {"grade": "A+"},
                 "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
                 "alternativeUrls": {},
+                "error_load": 0.0,
+                "error_check": 0.0,
+                "network": {"country": "RO", "region": "Europe"},
             },
             "https://xka.cz": {
-                "uptime": {"uptimeDay": 95.0},
+                "uptime": {"uptimeDay": 95.0, "uptimeWeek": 94.5},
                 "tls": {"grade": "A+"},
                 "engines": {"google": {}, "bing": {}, "duckduckgo": {}},
                 "alternativeUrls": {},
+                "error_load": 0.1,
+                "error_check": 0.0,
+                "network": {"country": "CZ", "region": "Europe"},
             },
         }
     }
