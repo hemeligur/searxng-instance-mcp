@@ -25,7 +25,7 @@ Servidor MCP que encapsula busca na web usando instâncias SearXNG, com rotaçã
 `/mnt/Arquivos_B/Documents/Guilherme/Projects/Dev/MCPs/searxng-instance-mcp`
 
 ## Data de Início
-2025-10-05
+2026-10-05
 
 ## Status
 🟡 Em Planejamento

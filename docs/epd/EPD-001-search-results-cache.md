@@ -2,7 +2,7 @@
 
 **Status**: Draft  
 **Author**: Hemeligur  
-**Created**: 2025-01-XX  
+**Created**: 2026-01-XX  
 **Type**: Feature Enhancement
 
 ---
@@ -316,4 +316,4 @@ async def test_cache_miss_then_hit():
 
 | Date | Status | Notes |
 |------|--------|-------|
-| 2025-01-XX | Draft | Initial proposal |
+| 2026-01-XX | Draft | Initial proposal |

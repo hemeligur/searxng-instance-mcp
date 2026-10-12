@@ -1,7 +1,7 @@
 # EPD-002: Sistema de Tiering por Qualidade de Instâncias
 
 **Status**: ✅ Implementado  
-**Data**: 2025-01-19  
+**Data**: 2026-01-19  
 **Autor**: hemeligur  
 **Implementado em**: `feature/hybrid-tier-scoring` (branch merged to main)
 **Revisor**: Sugestão de melhoria - integrar métricas externas da API searx.space
@@ -464,5 +464,5 @@ def test_recency_decay():
 
 | Data | Status | Notas |
 |------|--------|-------|
-| 2025-10-07 | Proposto | RFC criado com score puramente inferido |
-| 2025-01-19 | Draft | Melhorado para score híbrido (externo + interno) |
+| 2026-10-07 | Proposto | RFC criado com score puramente inferido |
+| 2026-01-19 | Draft | Melhorado para score híbrido (externo + interno) |

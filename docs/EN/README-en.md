@@ -59,7 +59,7 @@ Due to the nature of public instances, you may encounter:
 
 ### What this means in practice?
 
-In recent tests (October 2025), from ~96 public instances checked:
+In recent tests (October 2024), from ~96 public instances checked:
 - ~90% had active rate limiting
 - ~5% were blocking with anti-bot
 - ~4% were unavailable

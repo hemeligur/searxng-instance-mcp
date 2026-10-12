@@ -59,7 +59,7 @@ Devido à natureza das instâncias públicas, você pode encontrar:
 
 ### O que isso significa na prática?
 
-Em testes recentes (outubro 2025), das ~96 instâncias públicas verificadas:
+Em testes recentes (outubro 2026), das ~96 instâncias públicas verificadas:
 - ~90% estavam com rate limiting ativo
 - ~5% estavam bloqueando com anti-bot
 - ~4% estavam indisponíveis

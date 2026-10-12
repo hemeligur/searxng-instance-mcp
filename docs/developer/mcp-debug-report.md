@@ -1,6 +1,6 @@
 # MCP Server Debug Report - SearXNG Instance MCP
 
-**Data:** 2025-10-06  
+**Data:** 2026-10-06  
 **Projeto:** searxng-instance-mcp  
 **Status:** 🟡 Parcialmente Funcional
 
@@ -63,7 +63,7 @@ mcp__searxng_web_search__web_search({query: "python"})
 ## Tentativas de Solução
 
 ### Tentativa 1: Schema Minimalista
-**Data:** 2025-10-06 00:47
+**Data:** 2026-10-06 00:47
 
 Removemos todas as propriedades opcionais do schema:
 
@@ -82,7 +82,7 @@ inputSchema={
 ---
 
 ### Tentativa 2: Schema com Títulos
-**Data:** 2025-10-06 00:48
+**Data:** 2026-10-06 00:48
 
 Adicionamos títulos às propriedades:
 
@@ -101,7 +101,7 @@ inputSchema={
 ---
 
 ### Tentativa 3: Schema com $schema
-**Data:** 2025-10-06 00:49
+**Data:** 2026-10-06 00:49
 
 Adicionamos referência ao JSON Schema:
 
@@ -121,7 +121,7 @@ inputSchema={
 ---
 
 ### Tentativa 4: Sem Propriedades Opcionais
-**Data:** 2025-10-06 00:51
+**Data:** 2026-10-06 00:51
 
 Removemos `results_limit` completamente do schema:
 
@@ -140,7 +140,7 @@ inputSchema={
 ---
 
 ### Tentativa 5: Mudança de Exposição
-**Data:** 2025-10-06 00:52
+**Data:** 2026-10-06 00:52
 
 Testamos com diferentes configurações de `exposure`:
 
@@ -155,7 +155,7 @@ Testamos com diferentes configurações de `exposure`:
 ---
 
 ### Tentativa 6: Registro Global vs Local
-**Data:** 2025-10-06 00:55
+**Data:** 2026-10-06 00:55
 
 Testamos registrar o servidor globalmente:
 
@@ -168,7 +168,7 @@ pi mcp add searxng-global -- uv run python -m searxng_mcp
 ---
 
 ### Tentativa 7: Simplificação Total do Handler
-**Data:** 2025-10-06 00:58
+**Data:** 2026-10-06 00:58
 
 Simplificamos o handler ao máximo:
 
@@ -182,7 +182,7 @@ async def call_tool_handler(ctx, params):
 ---
 
 ### Tentativa 8: Verificação de Tipos do MCP SDK
-**Data:** 2025-10-06 00:59
+**Data:** 2026-10-06 00:59
 
 Verificamos a versão do MCP:
 

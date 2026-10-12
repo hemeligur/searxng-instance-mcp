@@ -8,7 +8,7 @@
 
 ---
 
-## Melhoria da Documentação (2025-10-06)
+## Melhoria da Documentação (2026-10-06)
 
 ### Problema Identificado
 README.md não deixava claro que o MCP é um **cliente** que usa instâncias públicas online, não um servidor de instâncias locais.
@@ -35,7 +35,7 @@ README.md não deixava claro que o MCP é um **cliente** que usa instâncias pú
 
 ## Auditoria do Memory Bank
 
-- **Data**: 2025-10-06
+- **Data**: 2026-10-06
 - **Harness**: Pi
 - **Ações realizadas**:
   - Criado `08-completedTasks.md` com 13 tarefas concluídas
@@ -45,7 +45,7 @@ README.md não deixava claro que o MCP é um **cliente** que usa instâncias pú
 
 ---
 
-## Documentação (2025-10-06 - Atualizada)
+## Documentação (2026-10-06 - Atualizada)
 
 ### Documentação Criada
 - `docs/developer/arquitetura.md` - Visão técnica da arquitetura com diagramas
@@ -54,7 +54,7 @@ README.md não deixava claro que o MCP é um **cliente** que usa instâncias pú
 ### Documentação Atualizada
 - `README.md` - Reestruturado como porta de entrada com links para docs/
 
-### Estrutura de Documentação (reorganizada em 2025-10-06)
+### Estrutura de Documentação (reorganizada em 2026-10-06)
 ```
 docs/
 ├── usuario/                 # Documentação para usuários
@@ -69,7 +69,7 @@ docs/
 
 ---
 
-## Bugs Investigados (2025-10-07)
+## Bugs Investigados (2026-10-07)
 
 ### Issue #3 - results_limit ignorado
 - **URL**: https://github.com/hemeligur/searxng-instance-mcp/issues/3
@@ -108,7 +108,7 @@ docs/
 
 ---
 
-## Configuração via Environment Variables (2025-10-07)
+## Configuração via Environment Variables (2026-10-07)
 
 ### CFG-001 Implementado
 Implementação de configuração via environment variables para controle de instâncias e tools de debug.
@@ -154,7 +154,7 @@ SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
 
 ---
 
-## RFC-001 - Sistema de Tiering por Qualidade (2025-10-07)
+## RFC-001 - Sistema de Tiering por Qualidade (2026-10-07)
 
 ### Proposta
 Implementar sistema de pontuação para classificar instâncias em **3 tiers**:
@@ -179,7 +179,7 @@ score = (success_rate × 0.4) + (recency_bonus × 0.3) +
 
 ---
 
-## CFG-002 - Discovery Dinâmico Corrigido (2025-10-07)
+## CFG-002 - Discovery Dinâmico Corrigido (2026-10-07)
 
 ### Problema
 A API do searx.space estava retornando **404** no endpoint `/api/v1/instances`. O sistema estava usando apenas **3-4 instâncias fallback**.
@@ -256,7 +256,7 @@ FALLBACK_INSTANCES = [
 
 ---
 
-## Melhorias de Resiliência (2025-10-07)
+## Melhorias de Resiliência (2026-10-07)
 
 ### Problema Identificado
 - Estado não persistia entre execuções do servidor MCP
@@ -319,7 +319,7 @@ FALLBACK_INSTANCES = [
 
 ---
 
-## Manutenção (2025-10-07)
+## Manutenção (2026-10-07)
 
 ### CHANGELOG.md Atualizado
 - Adicionada versão **0.2.0** com todas as mudanças do PR #5
@@ -329,7 +329,7 @@ FALLBACK_INSTANCES = [
 
 ---
 
-## Nova Skill: E2E Test (2025-10-11)
+## Nova Skill: E2E Test (2026-10-11)
 
 ### Skill Criada: `searxng-e2e-test`
 Local: `.pi/skills/searxng-e2e-test/`
@@ -367,7 +367,7 @@ searxng-e2e-test/
 
 ---
 
-## E2E Test Execution (2025-10-12)
+## E2E Test Execution (2026-10-12)
 
 ### Execução Realizada
 Executado primeiro teste da suite E2E com resultados parciais:
@@ -388,11 +388,11 @@ Executado primeiro teste da suite E2E com resultados parciais:
 - search.femboy.ad: rate limited
 
 ### Relatório Gerado
-`.pi/skills/searxng-e2e-test/reports/E2E-Test-Report-2025-10-12.md`
+`.pi/skills/searxng-e2e-test/reports/E2E-Test-Report-2026-10-12.md`
 
 ---
 
-## Decisão Final sobre o Projeto (2025-10-12)
+## Decisão Final sobre o Projeto (2026-10-12)
 
 ### Status: Projeto como Experimentação/Referência
 
@@ -429,7 +429,7 @@ Decidiu-se **documentar honestamente as limitações** ao invés de abandonar. A
 
 ---
 
-## Fix: Timeout e Test Isolation (2025-10-09)
+## Fix: Timeout e Test Isolation (2026-10-09)
 
 ### Problema Identificado
 - **Timeout >1min** ao fazer `web_search` - causava frustração para usuários
@@ -519,7 +519,7 @@ searxng-mcp/
 └── README.md
 ```
 
-## Configuração Pi (2025-10-06)
+## Configuração Pi (2026-10-06)
 
 ### Registro Global
 O servidor está registrado globalmente em `/home/guilherme/.pi/agent/mcp.json`:
