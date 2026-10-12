@@ -1,6 +1,6 @@
 # Project Status - SearXNG Instance MCP
 
-> **Last Updated**: October 2024
+> **Last Updated**: October 2026
 
 ## Current Status
 
@@ -15,7 +15,7 @@
 
 ## The Problem with Public Instances
 
-### Reality Check (October 2024)
+### Reality Check (October 2026)
 
 When testing the project, we found that **public SearXNG instances are not reliable**:
 

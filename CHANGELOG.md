@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test isolation**: Tests no longer pollute production cache. The `clean_manager` fixture now mocks both `load_instance_states` and `save_instance_states` to prevent test data (e.g., `instance1.example.com`) from leaking into `~/.cache/searxng-mcp/instance_state.json`.
 - **Issue #3 - `results_limit` parameter**: The `results_limit` parameter is now properly respected. The SearXNG API does not support a `limit` parameter, so the MCP now filters results client-side after receiving ~10 results from the API. Added `test_search_limit_filters_results` test.
 
-## [0.2.0] - 2025-10-07
+## [0.2.0] - 2026-10-07
 
 ### Added
 - **Rate limiting detection**: Automatically detects when instances return empty results due to rate limiting (HTTP 200, 418, or 403)
@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 57 unit tests (increased from 27)
 - New tests for rate limiting detection and backoff behavior
 
-## [0.1.0] - 2025-10-06
+## [0.1.0] - 2026-09-XX
 
 ### Added
 - MCP server implementation using FastMCP
