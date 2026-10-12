@@ -20,8 +20,8 @@ import json
 
 from fastmcp import FastMCP
 
-from .manager import async_get_manager
 from .constants import is_debug_enabled
+from .manager import async_get_manager
 
 # Create FastMCP server
 mcp = FastMCP("searxng-web-search", version="0.2.0")
@@ -50,7 +50,7 @@ async def web_search(query: str, results_limit: int = 10) -> str:
 
 def _register_debug_tools() -> None:
     """Register debug tools if SEARXNG_DEBUG_TOOLS=true."""
-    
+
     @mcp.tool()
     async def get_instances_status() -> str:
         """Retorna o status de todas as instâncias SearXNG gerenciadas.

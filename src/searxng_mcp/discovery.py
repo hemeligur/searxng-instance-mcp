@@ -313,7 +313,7 @@ async def discover_instances_full(use_cache: bool = True) -> list[DiscoveredInst
         logger.warning(f"Failed to fetch full instance data from searx.space API: {e}")
     except Exception as e:
         logger.warning(f"Unexpected error fetching full instance data: {e}")
-    
+
     # Return empty list - caller should use fallback
     return []
 

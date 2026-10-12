@@ -24,9 +24,14 @@ from typing import Optional
 
 import httpx
 
-from .constants import DEFAULT_LIMIT, DEFAULT_TIMEOUT, get_disabled_instances, get_backoff_base, get_backoff_max, get_global_timeout
+from .constants import (
+    DEFAULT_LIMIT,
+    DEFAULT_TIMEOUT,
+    get_disabled_instances,
+    get_global_timeout,
+)
 from .discovery import discover_instances, discover_instances_full, get_fallback_instances
-from .models import CircuitState, InstanceStatus, SearchResponse, SearchResult, ExternalMetrics
+from .models import CircuitState, ExternalMetrics, InstanceStatus, SearchResponse, SearchResult
 from .persistence import load_instance_states, save_instance_states
 
 logger = logging.getLogger(__name__)
@@ -39,7 +44,7 @@ _manager_lock = asyncio.Lock()
 
 def get_manager() -> "SearXNGManager":
     """Get the singleton SearXNGManager instance.
-    
+
     Returns:
         The singleton manager instance.
     """
@@ -51,9 +56,9 @@ def get_manager() -> "SearXNGManager":
 
 async def async_get_manager() -> "SearXNGManager":
     """Get the singleton manager instance asynchronously.
-    
+
     This is the preferred method when called from async context.
-    
+
     Returns:
         The singleton manager instance.
     """
@@ -84,13 +89,13 @@ class SearXNGManager:
         self.instances: dict[str, InstanceStatus] = {}
         self._initialized = False
         self._dirty = False  # Track if state needs to be saved
-        
+
         # Load persisted state
         self._load_persisted_state()
-        
+
         # Apply disabled instances from config
         self._apply_disabled_instances()
-    
+
     def _apply_disabled_instances(self) -> None:
         """Apply disabled instances from SEARXNG_DISABLED_INSTANCES env var."""
         disabled_urls = get_disabled_instances()
@@ -113,13 +118,13 @@ class SearXNGManager:
 
     def save_state(self) -> bool:
         """Save current instance states to disk.
-        
+
         Returns:
             True if saved successfully.
         """
         if not self._dirty:
             return True
-            
+
         try:
             success = save_instance_states(self.instances)
             if success:
@@ -137,26 +142,26 @@ class SearXNGManager:
         """Initialize instances asynchronously."""
         if self._initialized:
             return
-        
+
         # Get disabled instances from config
         disabled_urls = get_disabled_instances()
-        
+
         try:
             # Fetch full instance data with metrics from searx.space
             discovered_instances = await discover_instances_full(use_cache=True)
-            
+
             # Apply external metrics to instances
             metrics_applied = 0
             for discovered in discovered_instances:
                 url = discovered.url
-                
+
                 # Create InstanceStatus if not exists
                 if url not in self.instances:
                     status = InstanceStatus(url=url)
                     if url in disabled_urls:
                         status.disabled = True
                     self.instances[url] = status
-                
+
                 # Update external metrics
                 external = ExternalMetrics(
                     uptime_day=discovered.uptime,
@@ -170,7 +175,7 @@ class SearXNGManager:
                 self.instances[url].update_external_metrics(external)
                 metrics_applied += 1
                 self._mark_dirty()
-            
+
             # If no full data, try basic discovery
             if not discovered_instances:
                 instances = await discover_instances(use_cache=True)
@@ -181,18 +186,23 @@ class SearXNGManager:
                             status.disabled = True
                         self.instances[url] = status
                     self._mark_dirty()
-            
+
             # Shuffle for load distribution
             self._shuffle_instances()
-            
+
             disabled_count = sum(1 for s in self.instances.values() if s.disabled)
-            with_metrics = sum(1 for s in self.instances.values() if s._external_metrics is not None)
-            logger.info(f"Initialized with {len(self.instances)} instances ({disabled_count} disabled, {with_metrics} with external metrics)")
+            with_metrics = sum(
+                1 for s in self.instances.values() if s._external_metrics is not None
+            )
+            logger.info(
+                f"Initialized with {len(self.instances)} instances "
+                f"({disabled_count} disabled, {with_metrics} with external metrics)"
+            )
             self._initialized = True
-            
+
             # Save state after initialization
             self.save_state()
-            
+
         except Exception as e:
             logger.warning(f"Failed to discover instances: {e}, using fallback")
             await self._load_fallback_instances_async()
@@ -203,26 +213,26 @@ class SearXNGManager:
         random.shuffle(urls)
         # Recreate dict in new order
         self.instances = {url: self.instances[url] for url in urls}
-    
+
     def _get_instances_by_tier(self) -> dict[int, list[tuple[str, "InstanceStatus"]]]:
         """Get instances organized by tier.
-        
+
         Returns:
             Dict with tier numbers (1, 2, 3) as keys and lists of (url, status) tuples as values.
             Each tier list is shuffled for load distribution.
         """
         tiers: dict[int, list[tuple[str, InstanceStatus]]] = {1: [], 2: [], 3: []}
-        
+
         for url, status in self.instances.items():
             # Only include available instances
             if status.is_available():
                 tier = status.get_tier()
                 tiers[tier].append((url, status))
-        
+
         # Shuffle within each tier for load distribution
         for tier_urls in tiers.values():
             random.shuffle(tier_urls)
-        
+
         return tiers
 
     async def _load_fallback_instances_async(self) -> None:
@@ -268,7 +278,7 @@ class SearXNGManager:
                 f"state={status.state.value}, failures={status.failure_count}, "
                 f"backoff={backoff_secs}s"
             )
-        
+
         self._mark_dirty()
 
     async def search(self, query: str, limit: int = DEFAULT_LIMIT) -> SearchResponse:
@@ -298,7 +308,7 @@ class SearXNGManager:
         # Ensure initialized
         if not self._initialized:
             await self._async_initialize()
-        
+
         # Save state before making requests
         self.save_state()
 
@@ -319,11 +329,12 @@ class SearXNGManager:
         # Get instances organized by tier
         tiers = self._get_instances_by_tier()
         tier_counts = {t: len(instances) for t, instances in tiers.items()}
-        logger.debug(f"Instance tiers: T1={tier_counts[1]}, T2={tier_counts[2]}, T3={tier_counts[3]}")
+        logger.debug(
+            f"Instance tiers: T1={tier_counts[1]}, T2={tier_counts[2]}, T3={tier_counts[3]}"
+        )
 
         # Try each available instance in tier order: T1 → T2 → T3
         errors: list[dict] = []
-        skipped: list[str] = []
 
         for tier in [1, 2, 3]:
             for url, status in tiers[tier]:
@@ -338,7 +349,7 @@ class SearXNGManager:
                     start_time = time.time()
                     result = await self._try_instance(url, query, limit)
                     response_time = (time.time() - start_time) * 1000  # ms
-                    
+
                     if result.success:
                         result.instance_used = url
                         # Update circuit breaker status
@@ -384,7 +395,7 @@ class SearXNGManager:
                     self._update_instance_status(url, success=False, error=error_msg)
                     status.record_request(success=False)
                     logger.error(f"Unexpected error on {url}: {e}")
-            
+
             # Check if we hit global timeout after each tier
             elapsed = time.time() - search_start_time
             if elapsed >= global_timeout:
@@ -393,7 +404,7 @@ class SearXNGManager:
         # Check if we hit global timeout
         elapsed = time.time() - search_start_time
         hit_timeout = elapsed >= global_timeout
-        
+
         # Build error message
         if hit_timeout:
             error_msg = f"Global timeout ({global_timeout}s)"
@@ -401,7 +412,7 @@ class SearXNGManager:
             message += f"Tried {len(errors)} instances before timeout."
         else:
             error_msg = "All instances unavailable"
-            message = f"Failed to search using any available instance."
+            message = "Failed to search using any available instance."
 
         # Check if any instance was rate limited
         any_rate_limited = any(
@@ -417,10 +428,10 @@ class SearXNGManager:
             details=errors,
             rate_limited=any_rate_limited,
         )
-        
+
         # Save state after all instances failed
         self.save_state()
-        
+
         return response
 
     async def _try_instance(
@@ -540,7 +551,7 @@ class SearXNGManager:
                 open_count += 1
             else:
                 half_open += 1
-            
+
             if status.get_backoff_remaining():
                 in_backoff += 1
 
@@ -556,10 +567,10 @@ class SearXNGManager:
 
     def reset_instance(self, url: Optional[str] = None) -> dict:
         """Reset instance state.
-        
+
         Args:
             url: Specific instance URL to reset, or None to reset all.
-            
+
         Returns:
             Summary of reset action.
         """
@@ -580,7 +591,7 @@ class SearXNGManager:
 
     def get_available_instances(self) -> list[dict]:
         """Get list of currently available instances.
-        
+
         Returns:
             List of available instance info.
         """

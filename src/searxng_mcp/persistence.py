@@ -62,16 +62,16 @@ def load_instance_states() -> dict[str, InstanceStatus]:
 
         instances: dict[str, InstanceStatus] = {}
         skipped_disabled = 0
-        
+
         for url, state_data in data.get("instances", {}).items():
             # Normalize URL for comparison (remove trailing slash)
             normalized_url = url.rstrip('/')
-            
+
             # Skip instances that are disabled in config
             if normalized_url in disabled_urls or url in disabled_urls:
                 skipped_disabled += 1
                 continue
-                
+
             status = InstanceStatus(url=url)
             status.state = CircuitState(state_data.get("state", "closed"))
             status.failure_count = state_data.get("failure_count", 0)
@@ -114,7 +114,7 @@ def save_instance_states(instances: dict[str, InstanceStatus]) -> bool:
         url: status for url, status in instances.items()
         if not status.disabled
     }
-    
+
     skipped_disabled = len(instances) - len(enabled_instances)
 
     data = {
@@ -177,7 +177,7 @@ def get_state_info() -> Optional[dict]:
         stat = STATE_FILE.stat()
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         return {
             "file": str(STATE_FILE),
             "size_bytes": stat.st_size,
