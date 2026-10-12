@@ -203,6 +203,27 @@ class SearXNGManager:
         random.shuffle(urls)
         # Recreate dict in new order
         self.instances = {url: self.instances[url] for url in urls}
+    
+    def _get_instances_by_tier(self) -> dict[int, list[tuple[str, "InstanceStatus"]]]:
+        """Get instances organized by tier.
+        
+        Returns:
+            Dict with tier numbers (1, 2, 3) as keys and lists of (url, status) tuples as values.
+            Each tier list is shuffled for load distribution.
+        """
+        tiers: dict[int, list[tuple[str, InstanceStatus]]] = {1: [], 2: [], 3: []}
+        
+        for url, status in self.instances.items():
+            # Only include available instances
+            if status.is_available():
+                tier = status.get_tier()
+                tiers[tier].append((url, status))
+        
+        # Shuffle within each tier for load distribution
+        for tier_urls in tiers.values():
+            random.shuffle(tier_urls)
+        
+        return tiers
 
     async def _load_fallback_instances_async(self) -> None:
         """Load fallback instances asynchronously."""
@@ -253,10 +274,15 @@ class SearXNGManager:
     async def search(self, query: str, limit: int = DEFAULT_LIMIT) -> SearchResponse:
         """Execute a search query using available SearXNG instances.
 
-        Tries instances in order, implementing circuit breaker pattern:
+        Tries instances in tier order (T1 → T2 → T3), with circuit breaker pattern:
         - CLOSED: Normal operation, requests allowed
         - OPEN: After 3 failures, requests blocked until TTL expires
         - HALF_OPEN: After TTL, allows one test request
+
+        Instances are organized by tier based on hybrid scoring:
+        - T1 (Premium): score >= 0.70 - tried first
+        - T2 (Standard): score >= 0.45 - fallback
+        - T3 (Risky): score < 0.45 - last resort
 
         A global timeout (configurable via SEARXNG_GLOBAL_TIMEOUT env var, default 60s)
         prevents the search from taking too long when many instances are failing.
@@ -290,66 +316,79 @@ class SearXNGManager:
         global_timeout = get_global_timeout()
         search_start_time = time.time()
 
-        # Try each available instance
+        # Get instances organized by tier
+        tiers = self._get_instances_by_tier()
+        tier_counts = {t: len(instances) for t, instances in tiers.items()}
+        logger.debug(f"Instance tiers: T1={tier_counts[1]}, T2={tier_counts[2]}, T3={tier_counts[3]}")
+
+        # Try each available instance in tier order: T1 → T2 → T3
         errors: list[dict] = []
         skipped: list[str] = []
 
-        for url, status in self.instances.items():
-            # Check global timeout
+        for tier in [1, 2, 3]:
+            for url, status in tiers[tier]:
+                # Check global timeout
+                elapsed = time.time() - search_start_time
+                if elapsed >= global_timeout:
+                    logger.warning(f"Global timeout reached ({global_timeout}s), stopping search")
+                    break
+
+                # Attempt search on this instance
+                try:
+                    start_time = time.time()
+                    result = await self._try_instance(url, query, limit)
+                    response_time = (time.time() - start_time) * 1000  # ms
+                    
+                    if result.success:
+                        result.instance_used = url
+                        # Update circuit breaker status
+                        self._update_instance_status(url, success=True)
+                        # Record request metrics for scoring
+                        status.record_request(success=True, response_time_ms=response_time)
+                        # Save state after successful request
+                        self.save_state()
+                        return result
+                    else:
+                        errors.append({
+                            "instance": url,
+                            "error": result.error,
+                            "rate_limited": result.rate_limited,
+                        })
+                        self._update_instance_status(url, success=False, error=result.error)
+                        status.record_request(success=False)
+
+                except httpx.TimeoutException:
+                    error_msg = "Request timeout"
+                    errors.append({"instance": url, "error": error_msg})
+                    self._update_instance_status(url, success=False, error=error_msg)
+                    status.record_request(success=False)
+                    logger.warning(f"Timeout on {url}")
+
+                except httpx.HTTPStatusError as e:
+                    error_msg = f"HTTP {e.response.status_code}"
+                    errors.append({"instance": url, "error": error_msg})
+                    self._update_instance_status(url, success=False, error=error_msg)
+                    status.record_request(success=False)
+                    logger.warning(f"HTTP error on {url}: {e.response.status_code}")
+
+                except httpx.RequestError as e:
+                    error_msg = f"Request error: {type(e).__name__}"
+                    errors.append({"instance": url, "error": error_msg})
+                    self._update_instance_status(url, success=False, error=error_msg)
+                    status.record_request(success=False)
+                    logger.warning(f"Request error on {url}: {e}")
+
+                except Exception as e:
+                    error_msg = f"Unexpected error: {type(e).__name__}"
+                    errors.append({"instance": url, "error": error_msg})
+                    self._update_instance_status(url, success=False, error=error_msg)
+                    status.record_request(success=False)
+                    logger.error(f"Unexpected error on {url}: {e}")
+            
+            # Check if we hit global timeout after each tier
             elapsed = time.time() - search_start_time
             if elapsed >= global_timeout:
-                logger.warning(f"Global timeout reached ({global_timeout}s), stopping search")
                 break
-
-            # Check availability (includes backoff check)
-            if not status.is_available():
-                backoff_remaining = status.get_backoff_remaining()
-                if backoff_remaining and backoff_remaining > 0:
-                    skipped.append(f"{url} (backoff: {backoff_remaining:.0f}s)")
-                else:
-                    skipped.append(f"{url} (circuit: {status.state.value})")
-                continue
-
-            # Attempt search on this instance
-            try:
-                result = await self._try_instance(url, query, limit)
-                if result.success:
-                    result.instance_used = url
-                    self._update_instance_status(url, success=True)
-                    # Save state after successful request
-                    self.save_state()
-                    return result
-                else:
-                    errors.append({
-                        "instance": url,
-                        "error": result.error,
-                        "rate_limited": result.rate_limited,
-                    })
-                    self._update_instance_status(url, success=False, error=result.error)
-
-            except httpx.TimeoutException:
-                error_msg = "Request timeout"
-                errors.append({"instance": url, "error": error_msg})
-                self._update_instance_status(url, success=False, error=error_msg)
-                logger.warning(f"Timeout on {url}")
-
-            except httpx.HTTPStatusError as e:
-                error_msg = f"HTTP {e.response.status_code}"
-                errors.append({"instance": url, "error": error_msg})
-                self._update_instance_status(url, success=False, error=error_msg)
-                logger.warning(f"HTTP error on {url}: {e.response.status_code}")
-
-            except httpx.RequestError as e:
-                error_msg = f"Request error: {type(e).__name__}"
-                errors.append({"instance": url, "error": error_msg})
-                self._update_instance_status(url, success=False, error=error_msg)
-                logger.warning(f"Request error on {url}: {e}")
-
-            except Exception as e:
-                error_msg = f"Unexpected error: {type(e).__name__}"
-                errors.append({"instance": url, "error": error_msg})
-                self._update_instance_status(url, success=False, error=error_msg)
-                logger.error(f"Unexpected error on {url}: {e}")
 
         # Check if we hit global timeout
         elapsed = time.time() - search_start_time
@@ -359,12 +398,10 @@ class SearXNGManager:
         if hit_timeout:
             error_msg = f"Global timeout ({global_timeout}s)"
             message = f"Search stopped after {elapsed:.1f}s (global timeout: {global_timeout}s). "
-            message += f"Tried {len(errors)} instances before timeout. "
-            message += f"{len(skipped)} instances skipped (backoff/circuit breaker)."
+            message += f"Tried {len(errors)} instances before timeout."
         else:
             error_msg = "All instances unavailable"
-            message = f"Failed to search using any available instance. "
-            message += f"{len(skipped)} instances skipped (backoff/circuit breaker)."
+            message = f"Failed to search using any available instance."
 
         # Check if any instance was rate limited
         any_rate_limited = any(

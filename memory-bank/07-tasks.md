@@ -8,36 +8,6 @@ Este arquivo contém apenas tarefas pendentes. Tarefas concluídas foram movidas
 
 ## Tarefas Pendentes
 
-### TIER-006: Modificar manager.search() para usar tiers
-
-**Data de Criação**: 2025-01-19
-
-**Status**: [ ] Pendente
-
-**Prioridade**: Alta
-
-**Resumo**: Alterar lógica de seleção de instâncias para usar tiers
-
-**Entregáveis**: 
-- Busca tenta instâncias na ordem T1 → T2 → T3
-- Shuffle dentro de cada tier
-- Degradação graceful: T2 assume se T1 vazio/falhou
-
-**Contexto**: Ponto de entrada para todas as buscas - precisa usar o novo sistema de scoring
-
-**Critérios de Aceitação**: 
-- Instâncias T1 tentadas primeiro
-- Fallback automático para T2/T3
-- Métricas atualizadas após cada tentativa via `record_request()`
-
-**Subtarefas**:
-- [ ] Organizar instâncias por tier usando `get_tier()`
-- [ ] Implementar shuffle dentro de cada tier
-- [ ] Loop principal: T1 → T2 → T3
-- [ ] Registrar sucesso/falha após cada tentativa
-
----
-
 ### TIER-008: Implementar testes unitários para scoring
 
 **Data de Criação**: 2025-01-19
@@ -74,6 +44,6 @@ Este arquivo contém apenas tarefas pendentes. Tarefas concluídas foram movidas
 ## Notas
 
 - Tarefas concluídas foram movidas para `08-completedTasks.md`.
-- **TIER-001 a TIER-005**: ✅ Implementados
-- **TIER-006, TIER-008**: Pendentes
+- **TIER-001 a TIER-006**: ✅ Implementados
+- **TIER-008**: Pendente
 - Para histórico completo, consulte `08-completedTasks.md`.

@@ -238,6 +238,19 @@ Tarefas concluídas do projeto, ordenadas por código.
   - `src/searxng_mcp/manager.py` - `_async_initialize()` agora aplica métricas
 - **Testes**: 68 testes passando ✅
 
+### TIER-006: Modificar manager.search() para usar tiers
+- **Data de Conclusão**: 2025-01-19
+- **Entregáveis**:
+  - Novo método `_get_instances_by_tier()` organiza instâncias por tier
+  - Busca tenta instâncias na ordem T1 → T2 → T3
+  - Shuffle dentro de cada tier para distribuição de carga
+  - Métricas (`record_request()`) atualizadas após cada tentativa
+  - Degradação graceful: T2 assume se T1 vazio/falhou
+- **Arquivos Alterados**:
+  - `src/searxng_mcp/manager.py` - +`_get_instances_by_tier()`, `search()` reescrito
+  - `tests/test_manager.py` - testes ajustados para lógica de tiers
+- **Testes**: 68 testes passando ✅
+
 ---
 
 ## Resumo de Entregas
