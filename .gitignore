@@ -23,10 +23,6 @@ Thumbs.db
 # MCP
 .mcp/
 
-# Pi rules (keep rules versioned)
-.pi/*
-!.pi/rules/
-
 # Build artifacts
 dist/
 *.egg-info/
