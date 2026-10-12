@@ -139,6 +139,19 @@ async def _fetch_instances_from_api() -> list[str]:
     Raises:
         httpx.HTTPError: If the API request fails.
     """
+    instances = await _fetch_instances_from_api_full()
+    return [inst.url for inst in instances]
+
+
+async def _fetch_instances_from_api_full() -> list[DiscoveredInstance]:
+    """Fetch instances from searx.space API with full metrics.
+
+    Returns:
+        List of DiscoveredInstance objects with all metrics from the API.
+
+    Raises:
+        httpx.HTTPError: If the API request fails.
+    """
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.get(SEARX_SPACE_API)
         response.raise_for_status()
@@ -183,12 +196,9 @@ async def _fetch_instances_from_api() -> list[str]:
     filtered_instances.sort(key=lambda x: x.uptime, reverse=True)
     filtered_instances = filtered_instances[:MAX_INSTANCES]
 
-    # Extract URLs
-    instance_urls = [inst.url for inst in filtered_instances]
+    logger.info(f"Discovered {len(filtered_instances)} healthy instances from searx.space API")
 
-    logger.info(f"Discovered {len(instance_urls)} healthy instances from searx.space API")
-
-    return instance_urls
+    return filtered_instances
 
 
 async def _fetch_github_active_instances() -> list[str]:
@@ -269,6 +279,43 @@ async def discover_instances(use_cache: bool = True) -> list[str]:
     # Strategy 3: Fallback to hardcoded instances
     logger.info("Using fallback instances (all discovery sources failed)")
     return list(FALLBACK_INSTANCES)
+
+
+async def discover_instances_full(use_cache: bool = True) -> list[DiscoveredInstance]:
+    """Discover available SearXNG instances with full metrics.
+    
+    This is the preferred method for internal use as it returns complete
+    instance data including uptime, TLS grade, engine count, etc.
+    
+    Attempts to fetch instances from multiple sources in order:
+    1. searx.space/data/instances.json API
+    2. Fallback to empty list (caller should handle)
+    
+    Note: This function does not use cache as cache only stores URLs,
+    not full metrics. The cache is updated for the basic URL list.
+
+    Args:
+        use_cache: Whether to use cached instances if available. Defaults to True.
+        (Only used for basic URL list, metrics always fetched fresh)
+
+    Returns:
+        List of DiscoveredInstance objects with all metrics.
+    """
+    # Always fetch fresh metrics from searx.space API
+    try:
+        instances = await _fetch_instances_from_api_full()
+        if instances:
+            # Also update URL cache
+            urls = [inst.url for inst in instances]
+            _save_instances_to_cache(urls)
+            return instances
+    except httpx.HTTPError as e:
+        logger.warning(f"Failed to fetch full instance data from searx.space API: {e}")
+    except Exception as e:
+        logger.warning(f"Unexpected error fetching full instance data: {e}")
+    
+    # Return empty list - caller should use fallback
+    return []
 
 
 def get_fallback_instances() -> list[str]:

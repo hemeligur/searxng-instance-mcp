@@ -206,7 +206,7 @@ Tarefas concluídas do projeto, ordenadas por código.
 - **Arquivos Alterados**: `src/searxng_mcp/models.py`
 - **Testes**: 68 testes passando ✅
 
-### TIER-004: Implementar cálculo de score híbrido (parcial)
+### TIER-004: Implementar cálculo de score híbrido
 - **Data de Conclusão**: 2025-01-19
 - **Entregáveis**:
   - `RECENCY_HALF_LIFE = 3600.0` segundos
@@ -224,6 +224,18 @@ Tarefas concluídas do projeto, ordenadas por código.
   | 4/4 requests + TLS A+ | ~1.00 | T1 |
   | 10/10 requests (sem ext) | ~0.60 | T2 |
   | TLS B + 10/10 | ~0.76 | T1 |
+- **Testes**: 68 testes passando ✅
+
+### TIER-005: Integrar ExternalMetrics no discovery
+- **Data de Conclusão**: 2025-01-19
+- **Entregáveis**:
+  - Nova função `discover_instances_full()` em `discovery.py`
+  - Retorna `list[DiscoveredInstance]` com métricas completas da API
+  - `_async_initialize()` no manager agora aplica métricas externas às instâncias
+  - Métricas externas (`ExternalMetrics`) atualizadas a cada ciclo de discovery
+- **Arquivos Alterados**:
+  - `src/searxng_mcp/discovery.py` - +`discover_instances_full()`, +`_fetch_instances_from_api_full()`
+  - `src/searxng_mcp/manager.py` - `_async_initialize()` agora aplica métricas
 - **Testes**: 68 testes passando ✅
 
 ---

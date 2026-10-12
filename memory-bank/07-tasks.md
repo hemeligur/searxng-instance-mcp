@@ -8,33 +8,6 @@ Este arquivo contém apenas tarefas pendentes. Tarefas concluídas foram movidas
 
 ## Tarefas Pendentes
 
-### TIER-005: Integrar ExternalMetrics no discovery
-
-**Data de Criação**: 2025-01-19
-
-**Status**: [ ] Pendente
-
-**Prioridade**: Alta
-
-**Resumo**: Propagar métricas externas para InstanceStatus durante discovery
-
-**Entregáveis**: 
-- Método `update_external_metrics()` em InstanceStatus ✅ (já implementado)
-- Modificação em `discover_instances()` para popular métricas
-
-**Contexto**: Discovery é a fonte de dados externos - precisa popular o cache nas instâncias do manager
-
-**Critérios de Aceitação**: 
-- Métricas externas atualizadas a cada ciclo de discovery
-- Cache de métricas com timestamp para invalidação
-
-**Subtarefas**:
-- [x] Implementar `update_external_metrics()` ✅
-- [ ] Modificar `_fetch_instances_from_api()` para retornar DiscoveredInstance completo
-- [ ] Atualizar `manager.py` para aplicar métricas às instâncias durante init
-
----
-
 ### TIER-006: Modificar manager.search() para usar tiers
 
 **Data de Criação**: 2025-01-19
@@ -101,6 +74,6 @@ Este arquivo contém apenas tarefas pendentes. Tarefas concluídas foram movidas
 ## Notas
 
 - Tarefas concluídas foram movidas para `08-completedTasks.md`.
-- **TIER-001 a TIER-004**: ✅ Implementados - Models e Scoring
-- TIER-005, TIER-006, TIER-008: Pendentes
+- **TIER-001 a TIER-005**: ✅ Implementados
+- **TIER-006, TIER-008**: Pendentes
 - Para histórico completo, consulte `08-completedTasks.md`.

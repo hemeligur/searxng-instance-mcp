@@ -25,8 +25,8 @@ from typing import Optional
 import httpx
 
 from .constants import DEFAULT_LIMIT, DEFAULT_TIMEOUT, get_disabled_instances, get_backoff_base, get_backoff_max, get_global_timeout
-from .discovery import discover_instances, get_fallback_instances
-from .models import CircuitState, InstanceStatus, SearchResponse, SearchResult
+from .discovery import discover_instances, discover_instances_full, get_fallback_instances
+from .models import CircuitState, InstanceStatus, SearchResponse, SearchResult, ExternalMetrics
 from .persistence import load_instance_states, save_instance_states
 
 logger = logging.getLogger(__name__)
@@ -142,25 +142,52 @@ class SearXNGManager:
         disabled_urls = get_disabled_instances()
         
         try:
-            # Try to discover instances from searx.space
-            instances = await discover_instances(use_cache=True)
+            # Fetch full instance data with metrics from searx.space
+            discovered_instances = await discover_instances_full(use_cache=True)
             
-            # Add new instances, preserving existing state
-            # Skip instances that are explicitly disabled
-            for url in instances:
+            # Apply external metrics to instances
+            metrics_applied = 0
+            for discovered in discovered_instances:
+                url = discovered.url
+                
+                # Create InstanceStatus if not exists
                 if url not in self.instances:
                     status = InstanceStatus(url=url)
-                    # Mark as disabled if in config
                     if url in disabled_urls:
                         status.disabled = True
                     self.instances[url] = status
+                
+                # Update external metrics
+                external = ExternalMetrics(
+                    uptime_day=discovered.uptime,
+                    uptime_week=discovered.uptime_week,
+                    tls_grade=discovered.tls_rank,
+                    engine_count=len(discovered.engines),
+                    error_load=discovered.error_load,
+                    error_check=discovered.error_check,
+                    network_country=discovered.network_country,
+                )
+                self.instances[url].update_external_metrics(external)
+                metrics_applied += 1
                 self._mark_dirty()
+            
+            # If no full data, try basic discovery
+            if not discovered_instances:
+                instances = await discover_instances(use_cache=True)
+                for url in instances:
+                    if url not in self.instances:
+                        status = InstanceStatus(url=url)
+                        if url in disabled_urls:
+                            status.disabled = True
+                        self.instances[url] = status
+                    self._mark_dirty()
             
             # Shuffle for load distribution
             self._shuffle_instances()
             
             disabled_count = sum(1 for s in self.instances.values() if s.disabled)
-            logger.info(f"Initialized with {len(self.instances)} instances ({disabled_count} disabled)")
+            with_metrics = sum(1 for s in self.instances.values() if s._external_metrics is not None)
+            logger.info(f"Initialized with {len(self.instances)} instances ({disabled_count} disabled, {with_metrics} with external metrics)")
             self._initialized = True
             
             # Save state after initialization
