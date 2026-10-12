@@ -1,8 +1,9 @@
 # EPD-002: Sistema de Tiering por Qualidade de Instâncias
 
-**Status**: Draft  
+**Status**: ✅ Implementado  
 **Data**: 2025-01-19  
 **Autor**: hemeligur  
+**Implementado em**: `feature/hybrid-tier-scoring` (branch merged to main)
 **Revisor**: Sugestão de melhoria - integrar métricas externas da API searx.space
 
 ---
