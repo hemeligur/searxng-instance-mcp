@@ -118,6 +118,17 @@
 - **Arquivo**: `pyproject.toml`
 - **Build**: Verificada com sucesso (`uv build`)
 
+### 2025-10-08 (PR #8 Review Fixes)
+- **Correções aplicadas ao PR #8 (hybrid-tier-scoring)**:
+  - Constantes de scoring extraídas: `TLS_GRADE_SCORES`, `TLS_UNKNOWN_FALLBACK`, etc.
+  - Magic numbers `0.3` e `0.12` substituídos por constantes nomeadas
+  - Variável `skipped` não utilizada removida do manager.py
+  - Linhas longas corrigidas em models.py e manager.py
+  - Problemas de whitespace corrigidos via `ruff --fix --unsafe-fixes`
+  - Ruff instalado via `uv sync --dev` para linting
+- **Testes**: 99 passando ✅
+- **Commit**: `2bf7293`
+
 ### 2025-10-07 (CFG-001 - Config via Env Vars)
 - **Tarefa**: Configuração via environment variables para instâncias desabilitadas e tools de debug
 - **Entregáveis implementados**:
