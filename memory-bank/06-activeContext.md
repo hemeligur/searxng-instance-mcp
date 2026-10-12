@@ -329,8 +329,97 @@ FALLBACK_INSTANCES = [
 
 ---
 
-## Status Atual
-✅ **PRODUTO PRONTO** - MCP funcionando globalmente no Pi
+## Nova Skill: E2E Test (2025-10-11)
+
+### Skill Criada: `searxng-e2e-test`
+Local: `.pi/skills/searxng-e2e-test/`
+
+#### Estrutura
+```
+searxng-e2e-test/
+├── SKILL.md              # Instruções de uso
+├── scripts/
+│   └── run-tests.js      # Script de execução automatizada
+└── docs/
+    └── report-template.md # Template de relatório
+```
+
+#### Ferramentas MCP Utilizadas
+| Tool | Propósito |
+|------|----------|
+| `web_search` | Teste principal de busca |
+| `get_instances_status` | Verificar estado de todas instâncias |
+| `get_available_instances` | Listar instâncias disponíveis |
+| `reset_instance` | Testar reset de circuit breaker |
+
+#### Suite de Testes
+1. **T1**: Busca básica (3 queries)
+2. **T2**: Limite de resultados (5, 10, 20)
+3. **T3**: Edge cases (vazia, curta, especiais)
+4. **T4**: Circuit breaker (reset + transição)
+5. **T5**: Distribuição de carga (5 iterações)
+
+#### Uso
+```javascript
+// Via codemode, executar script automatizado
+// Ou manualmente seguindo SKILL.md
+```
+
+---
+
+## E2E Test Execution (2025-10-12)
+
+### Execução Realizada
+Executado primeiro teste da suite E2E com resultados parciais:
+
+| Resultado | Status |
+|-----------|--------|
+| Skill Funcional | ✅ |
+| Reset Funcionando | ✅ |
+| get_instances_status | ✅ |
+| web_search | ❌ Timeout (60s) |
+
+### Causa do Timeout
+**Instâncias SearXNG públicas com problemas**:
+- 96 instâncias verificadas → apenas 1 funcionando
+- sx.xo.st: sem resposta
+- search.ctq.ro: anti-bot blocking
+- search.banke.cloud: rate limited
+- search.femboy.ad: rate limited
+
+### Relatório Gerado
+`.pi/skills/searxng-e2e-test/reports/E2E-Test-Report-2025-10-12.md`
+
+---
+
+## Decisão Final sobre o Projeto (2025-10-12)
+
+### Status: Projeto como Experimentação/Referência
+
+Decidiu-se **documentar honestamente as limitações** ao invés de abandonar. A documentação serve como referência para outros desenvolvedores que encontrem o repo.
+
+### Documentação Criada/Atualizada
+1. **README.md** - Nova seção ⚠️ Limitação Importante com alternativas
+2. **docs/EN/README-en.md** - Mesma seção em inglês
+3. **docs/PROJECT_STATUS.md** - Novo documento explicando situação completa
+4. **docs/EN/PROJECT_STATUS.md** - Versão em inglês
+5. **docs/usuario/troubleshooting.md** - Nova seção #8 sobre instâncias públicas
+6. **docs/EN/troubleshooting-en.md** - Versão em inglês
+
+### Conclusão
+| Aspecto | Status |
+|---------|--------|
+| Código | ✅ Bom (66 testes, arquitetura sólida) |
+| Premissa | ❌ Inválida (instâncias públicas não são confiáveis) |
+| Repo | 📚 Mantido como referência/educacional |
+
+### Alternativas Recomendadas
+| Serviço | Confiabilidade | Custo |
+|---------|----------------|-------|
+| SerpAPI | Alta | Paid (free tier) |
+| Google Custom Search | Alta | 100/day free |
+| DuckDuckGo API | Média | Free |
+| Instância Local | Alta | Self-hosted |
 ✅ **Issue #4 CORRIGIDO** - Rate limiting detectado + backoff exponencial + persistência
 ✅ **CFG-001 IMPLEMENTADO** - Configuração via env vars (disabled instances + debug tools)
 ✅ **CFG-002 IMPLEMENTADO** - Discovery dinâmico corrigido (API searx.space + GitHub fallback)
@@ -487,9 +576,12 @@ searxng-instance-mcp/
 │   ├── manager.py        # SearXNGManager
 │   ├── models.py         # CircuitState, SearchResult
 │   └── server.py         # FastMCP server
-├── tests/                # 57 testes (pytest)
+├── tests/                # 66 testes (pytest)
 ├── memory-bank/          # Documentação
 ├── pyproject.toml
 ├── README.md
-└── .pi/mcp.json         # REMOVIDO (usa registro global)
+└── .pi/
+    ├── mcp.json         # Registro global (Pi)
+    └── skills/           # Skills de projeto
+        └── searxng-e2e-test/  # Skill de testes E2E
 ```

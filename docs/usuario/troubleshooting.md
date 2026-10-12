@@ -205,6 +205,47 @@ uv run python -m searxng_mcp
 
 ---
 
+### 8. Instâncias Públicas Não Funcionam
+
+**Sintoma:**
+- Buscas sempre falham ou timeout
+- Todas as instâncias com rate limit
+- Problemas persistentes mesmo após esperar
+
+**Causa Real:**
+As instâncias públicas SearXNG são mantidas por voluntários e frequentemente:
+- Implementam rate limiting agressivo
+- Ativam proteção anti-bot
+- Ficam temporariamente indisponíveis
+
+**Soluções:**
+
+1. **Use instância local (recomendado para produção):**
+```bash
+# Rodar SearXNG com Docker
+docker run --rm -p 8888:8888 -e SEARXNG_BASE_URL=http://localhost:8888/ searxng/searxng
+
+# Configurar no MCP
+SEARXNG_INSTANCES="http://localhost:8888" uv run python -m searxng_mcp
+```
+
+2. **Use uma alternativa confiável:**
+
+| Serviço | Vantagem | Como Migrar |
+|---------|----------|-------------|
+| SerpAPI | API oficial, confiável | Requer reescrever cliente HTTP |
+| Google Custom Search | Free tier (100/dia) | Requer Google API key |
+| DuckDuckGo | Simples | API com limitações |
+
+3. **Verifique se há instâncias funcionais:**
+```bash
+curl -s "https://raw.githubusercontent.com/purujawa06-bot/SearXNG-active-instance/main/active.json"
+```
+
+**Nota:** Se você precisa de busca web confiável em produção, considere que este projeto foi desenvolvido como uma **experimentação**. Para uso em produção, instâncias locais ou APIs comerciais são mais adequadas.
+
+---
+
 ## Comandos de Debug
 
 ### Ver Status do Cache

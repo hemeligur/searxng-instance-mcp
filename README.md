@@ -47,6 +47,39 @@ Este servidor MCP permite que agentes de IA façam buscas na web de forma **priv
 
 ---
 
+## ⚠️ Limitação Importante
+
+**Este projeto depende de instâncias SearXNG públicas mantidas por terceiros.**
+
+Devido à natureza das instâncias públicas, você pode encontrar:
+- **Rate Limiting**: Muitas instâncias limitam requisições (HTTP 429)
+- **Anti-Bot Protection**: Algumas instâncias bloqueiam requisições automatizadas
+- **Instabilidade**: Instâncias podem sair do ar ou mudar comportamento sem aviso
+- **Timeouts**: Conexões lentas ou indisponíveis
+
+### O que isso significa na prática?
+
+Em testes recentes (outubro 2025), das ~96 instâncias públicas verificadas:
+- ~90% estavam com rate limiting ativo
+- ~5% estavam bloqueando com anti-bot
+- ~4% estavam indisponíveis
+- ~1% estavam funcionando
+
+### Alternativas a Considerar
+
+Se você precisa de **confiabilidade em produção**, considere:
+
+| Alternativa | Confiabilidade | Custo | Notas |
+|-------------|-----------------|-------|-------|
+| [SerpAPI](https://serpapi.com/) | Alta | Paid (free tier) | API oficial com good practices |
+| [Google Custom Search](https://developers.google.com/custom-search) | Alta | 100 searches/day free | Limite diário, mas estável |
+| [DuckDuckGo API](https://duckduckgo.com/api) | Média | Free | Limitações de uso |
+| **Instância Local** | Alta | Self-hosted | Sem dependência de terceiros |
+
+Consulte [docs/searxng-local.md](docs/searxng-local.md) para instruções de como rodar sua própria instância SearXNG.
+
+---
+
 ## Quick Start
 
 ### Instalação
@@ -230,6 +263,7 @@ SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
 ## Documentação
 
 ### Para Usuários
+- [Status do Projeto](docs/PROJECT_STATUS.md) - ⚠️ Status atual e limitações das instâncias públicas
 - [Guia SearXNG](docs/usuario/searxng-guide.md) - Como usar SearXNG para busca web
 - [SearXNG Guide (EN)](docs/EN/searxng-guide-en.md) - How to use SearXNG for web search
 - [Troubleshooting](docs/usuario/troubleshooting.md) - Solução de problemas comuns
@@ -237,7 +271,7 @@ SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
 
 ### Para Desenvolvedores
 - [Arquitetura](docs/developer/arquitetura.md) - Visão técnica da arquitetura
-- [Architecture (EN)](docs/EN/architecture.md) - Technical architecture overview - Visão técnica da arquitetura
+- [Architecture (EN)](docs/EN/architecture.md) - Technical architecture overview
 - [Debug Report](docs/developer/mcp-debug-report.md) - Histórico de debugging do MCP
 
 ### Skills

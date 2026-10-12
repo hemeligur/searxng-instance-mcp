@@ -205,6 +205,47 @@ uv run python -m searxng_mcp
 
 ---
 
+### 8. Public Instances Not Working
+
+**Symptom:**
+- Searches always fail or timeout
+- All instances rate limited
+- Persistent problems even after waiting
+
+**Root Cause:**
+Public SearXNG instances are maintained by volunteers and frequently:
+- Implement aggressive rate limiting
+- Activate anti-bot protection
+- Become temporarily unavailable
+
+**Solutions:**
+
+1. **Use a local instance (recommended for production):**
+```bash
+# Run SearXNG with Docker
+docker run --rm -p 8888:8888 -e SEARXNG_BASE_URL=http://localhost:8888/ searxng/searxng
+
+# Configure in MCP
+SEARXNG_INSTANCES="http://localhost:8888" uv run python -m searxng_mcp
+```
+
+2. **Use a reliable alternative:**
+
+| Service | Advantage | How to Migrate |
+|---------|-----------|----------------|
+| SerpAPI | Official API, reliable | Requires rewriting HTTP client |
+| Google Custom Search | Free tier (100/day) | Requires Google API key |
+| DuckDuckGo | Simple | API with limitations |
+
+3. **Check for working instances:**
+```bash
+curl -s "https://raw.githubusercontent.com/purujawa06-bot/SearXNG-active-instance/main/active.json"
+```
+
+**Note:** If you need reliable web search in production, consider that this project was developed as an **experimentation**. For production use, local instances or commercial APIs are more suitable.
+
+---
+
 ## Debug Commands
 
 ### View Cache Status

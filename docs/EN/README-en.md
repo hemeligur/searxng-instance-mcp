@@ -47,6 +47,39 @@ This MCP server enables AI agents to perform **private** web searches using the 
 
 ---
 
+## ⚠️ Important Limitation
+
+**This project depends on public SearXNG instances maintained by third parties.**
+
+Due to the nature of public instances, you may encounter:
+- **Rate Limiting**: Many instances limit requests (HTTP 429)
+- **Anti-Bot Protection**: Some instances block automated requests
+- **Instability**: Instances may go offline or change behavior without notice
+- **Timeouts**: Slow or unavailable connections
+
+### What this means in practice?
+
+In recent tests (October 2025), from ~96 public instances checked:
+- ~90% had active rate limiting
+- ~5% were blocking with anti-bot
+- ~4% were unavailable
+- ~1% were working
+
+### Alternatives to Consider
+
+If you need **production reliability**, consider:
+
+| Alternative | Reliability | Cost | Notes |
+|-------------|-------------|------|-------|
+| [SerpAPI](https://serpapi.com/) | High | Paid (free tier) | Official API with good practices |
+| [Google Custom Search](https://developers.google.com/custom-search) | High | 100 searches/day free | Daily limit, but stable |
+| [DuckDuckGo API](https://duckduckgo.com/api) | Medium | Free | Usage limitations |
+| **Local Instance** | High | Self-hosted | No third-party dependency |
+
+See [searxng-local-en.md](./searxng-local-en.md) for instructions on running your own SearXNG instance.
+
+---
+
 ## Quick Start
 
 ### Installation
@@ -228,6 +261,7 @@ SEARXNG_DEBUG_TOOLS=true uv run python -m searxng_mcp
 ## Documentation
 
 ### For Users
+- [Project Status](PROJECT_STATUS.md) - ⚠️ Current status and public instance limitations
 - [SearXNG Guide](searxng-guide-en.md) - How to use SearXNG for web search
 - [Troubleshooting](troubleshooting-en.md) - Common problems and solutions
 
