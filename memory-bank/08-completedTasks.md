@@ -251,6 +251,30 @@ Tarefas concluídas do projeto, ordenadas por código.
   - `tests/test_manager.py` - testes ajustados para lógica de tiers
 - **Testes**: 68 testes passando ✅
 
+### TIER-007: Atualizar persistência para novo estado
+- **Data de Conclusão**: 2025-01-19
+- **Status**: ✅ Implementado implicitamente nas tarefas anteriores
+- **Entregáveis**:
+  - `to_dict()` atualizado com: `total_requests`, `successful_requests`, `response_times_ms`, `external_metrics`
+  - `from_dict()` restaura todos os novos campos
+  - Backward compatibility com estado antigo (campos opcionais)
+- **Nota**: Serialização já coberta pelos testes existentes
+
+### TIER-008: Implementar testes unitários para scoring
+- **Data de Conclusão**: 2025-01-19
+- **Entregáveis**:
+  - Novo arquivo `tests/test_tier_scoring.py` com 31 testes
+  - Cobertura completa do sistema de scoring
+- **Testes Implementados**:
+  - `TestExternalMetrics`: criação, serialização, deserialização (5 testes)
+  - `TestInstanceStatusMetrics`: success_rate, circuit_score, record_request (7 testes)
+  - `TestRecencyBonus`: decay exponencial, half-life (3 testes)
+  - `TestTierScore`: scores híbridos, classificação em tiers (6 testes)
+  - `TestExternalMetricsIntegration`: persistência, backward compatibility (4 testes)
+  - `TestManagerTierIntegration`: _get_instances_by_tier, shuffle (2 testes)
+  - `TestEdgeCases`: TLS grades, uptime extremo, many requests (4 testes)
+- **Testes**: 99 total (68 existentes + 31 novos) - todos passando ✅
+
 ---
 
 ## Resumo de Entregas
