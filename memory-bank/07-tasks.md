@@ -15,5 +15,6 @@ Este arquivo contém apenas tarefas pendentes. Tarefas concluídas foram movidas
 ## Notas
 
 - Tarefas concluídas foram movidas para `08-completedTasks.md`.
-- CFG-001: ✅ Implementada - Configuração via env vars
+- **TIER-001 a TIER-008**: ✅ Todos implementados
+- Sistema de tiering híbrido completo e testado
 - Para histórico completo, consulte `08-completedTasks.md`.

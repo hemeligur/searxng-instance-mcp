@@ -17,6 +17,7 @@
 """Tests for SearXNG manager functionality."""
 
 import asyncio
+import time
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
@@ -178,7 +179,9 @@ async def test_circuit_breaker_transitions(clean_manager):
 
 @pytest.mark.asyncio
 async def test_fallback_search_order(clean_manager):
-    """Test that search tries instances in order."""
+    """Test that search tries instances in tier order with fallback."""
+    from searxng_mcp.models import ExternalMetrics
+    
     manager = clean_manager
     
     search_response = {
@@ -193,13 +196,36 @@ async def test_fallback_search_order(clean_manager):
         ]
     }
 
-    # Add test instances in order
-    manager.instances["https://first.example.com"] = InstanceStatus(url="https://first.example.com")
-    manager.instances["https://second.example.com"] = InstanceStatus(url="https://second.example.com")
+    # Add test instances with different tiers
+    # First instance: T1 (Premium) - should be tried first
+    first_status = InstanceStatus(url="https://first.example.com")
+    first_status.update_external_metrics(ExternalMetrics(
+        uptime_day=100.0,
+        tls_grade="A+",
+        engine_count=20,
+    ))
+    # Add successful requests to boost internal score
+    first_status.record_request(success=True)
+    first_status.record_request(success=True)
+    first_status.record_request(success=True)
+    manager.instances["https://first.example.com"] = first_status
+    
+    # Second instance: T3 (Risky) - should be tried last
+    # Create WITHOUT external metrics to keep score low
+    second_status = InstanceStatus(url="https://second.example.com")
+    # No external metrics = low external score
+    # No request history = neutral internal score
+    manager.instances["https://second.example.com"] = second_status
+    
+    # Verify tiers are different
+    first_tier = first_status.get_tier()
+    second_tier = second_status.get_tier()
+    assert first_tier == 1, f"First should be T1, got T{first_tier} (score={first_status.calculate_tier_score():.3f})"
+    assert second_tier == 3, f"Second should be T3, got T{second_tier} (score={second_status.calculate_tier_score():.3f})"
 
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
-        # First fails, second succeeds
+        # First (T1) fails, second (T3) succeeds
         mock_client.get.side_effect = [
             httpx.TimeoutException("Timeout"),  # First instance fails
             MagicMock(status_code=200, json=lambda: search_response),  # Second succeeds
@@ -209,7 +235,7 @@ async def test_fallback_search_order(clean_manager):
 
         result = await manager.search("test")
 
-        # Should succeed using second instance
+        # Should succeed using second instance (T3 fallback)
         assert result.success is True
         assert result.instance_used is not None
         assert "second.example.com" in result.instance_used
@@ -439,14 +465,30 @@ async def test_http_403_treated_as_failure(clean_manager):
 
 @pytest.mark.asyncio
 async def test_rate_limited_falls_back_to_next_instance(clean_manager):
-    """Test that rate limited instance causes fallback to next instance."""
+    """Test that rate limited instance causes fallback to next instance in different tier."""
+    from searxng_mcp.models import ExternalMetrics
+    
     manager = clean_manager
     
-    # Add test instances
+    # Add test instances with different tiers to ensure deterministic order
+    # Rate limited instance: T1 (tried first)
     rate_limited_url = "https://rate-limited.example.com"
+    rate_limited_status = InstanceStatus(url=rate_limited_url)
+    rate_limited_status.update_external_metrics(ExternalMetrics(
+        uptime_day=100.0,
+        tls_grade="A+",
+        engine_count=20,
+    ))
+    rate_limited_status.record_request(success=True)
+    rate_limited_status.record_request(success=True)
+    rate_limited_status.record_request(success=True)
+    manager.instances[rate_limited_url] = rate_limited_status
+    
+    # Working instance: T3 (tried last as fallback)
     working_url = "https://working.example.com"
-    manager.instances[rate_limited_url] = InstanceStatus(url=rate_limited_url)
-    manager.instances[working_url] = InstanceStatus(url=working_url)
+    working_status = InstanceStatus(url=working_url)
+    # No external metrics = lower tier
+    manager.instances[working_url] = working_status
 
     successful_response = {
         "results": [
